@@ -10,7 +10,9 @@ function Dashboard(props) {
                     User Management
                 </h1>
                 <button className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out">
+                    <a href="/addUser" className="flex items-center">
                     Add New Customer
+                    </a>
                 </button>
             </div>
 

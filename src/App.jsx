@@ -10,6 +10,7 @@ import UserDashboard from "./user/dashboard/UserDashboard.jsx";
 import Login from "./login/login.jsx";
 import ForgotPassword from "./login/ForgotPassword.jsx";
 import ResetPassword from "./login/ResetPassword.jsx";
+import AddUser from "./user/dashboard/AddUser.jsx";
 
 
 const AppContent = () => {
@@ -32,6 +33,7 @@ const AppContent = () => {
         <Route path={"/login"} element={<Login />} />
         <Route path={"/forgot-password"} element={<ForgotPassword />} />
         <Route path={"/Reset-password"} element={<ResetPassword />} />
+        <Route path={"/addUser"} element={<AddUser />} />
       </Routes>
     </>
   );
