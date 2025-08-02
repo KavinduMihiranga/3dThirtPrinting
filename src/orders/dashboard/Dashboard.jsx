@@ -2,32 +2,28 @@ import React, {useEffect, useState} from 'react';
 import { ArrowLeft } from 'lucide-react';
 import axios from "axios";
 import { useNavigate } from 'react-router-dom';
+
 function Dashboard(props) {
 
-    const [admin, setAdmin] = React.useState([]);
+    const [order, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
-    
+
     useEffect(() => {
-        getAdmin();  
+        getOrder();  
     },[]);
 
-    const getAdmin = async() => {
-        try{
-            const res = await axios.get("/api/admin")
-            console.log("Axios Response:", res.data.data);
-            setAdmin(res.data.data || []);
-            setLoading(false);
-        }catch(error) {
-            console.error("Axios Error:", error);
-            setLoading(false);
-        }
+    const getOrder = async() => {
+        try {
+        const res = await axios.get("/api/order")
+        console.log("Axios Response:", res.data.data);
+        setOrders(res.data.data || []);
+        setLoading(false);
+    } catch(error) {
+        console.error("Axios Error:", error);
+        setLoading(false);
     };
-
-    // const handleEdit = (id) => {
-    //     console.log("Edit button clicked for ID:", id); 
-
-    // };
+};
 
     const handleDelete = async (id) => {
         console.log("Delete button clicked for ID:", id);
@@ -35,26 +31,25 @@ function Dashboard(props) {
     if (!confirmDelete) return;
 
     try {
-        await axios.delete(`/api/admin/${id}`);
-        alert("User deleted successfully!");
+        await axios.delete(`/api/order/${id}`);
+        alert("Order deleted successfully!");
         // Refresh the admin list
-        getAdmin();
+        getOrder();
     } catch (error) {
         console.error("Delete Error:", error);
         alert("Failed to delete user.");
     }
     };
-
     return (
         <div className="bg-white p-6 rounded-lg shadow-md min-h-full">
             <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
                 <h1 className="text-3xl font-bold text-gray-800 flex items-center">
                     <ArrowLeft size={24} className="mr-3 text-gray-500" />
-                    User Management
+                    Order Management
                 </h1>
                 <button className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out">
-                    <a href="/addUser" className="flex items-center">
-                    Add New Customer
+                    <a href="/addOrder" className="flex items-center">
+                    Add New Order
                     </a>
                 </button>
             </div>
@@ -75,41 +70,44 @@ function Dashboard(props) {
                 <table className="min-w-full bg-white border border-gray-200 rounded-lg">
                     <thead>
                     <tr className="bg-gray-100 border-b border-gray-200 text-gray-600 uppercase text-sm leading-normal">
-                        <th className="py-3 px-6 text-left">Name</th>
-                        <th className="py-3 px-6 text-left">Email</th>
-                        <th className="py-3 px-6 text-left">Contact Number</th>
+                        <th className="py-3 px-6 text-left">Customer Name</th>
+                        <th className="py-3 px-6 text-left">T-shirt Name</th>
                         <th className="py-3 px-6 text-left">Address</th>
+                        <th className="py-3 px-6 text-left">Qty</th>
+                        <th className="py-3 px-6 text-center">Date</th>
+                        <th className="py-3 px-6 text-center">Status</th>
                         <th className="py-3 px-6 text-center">Action</th>
                     </tr>
                     </thead>
                     <tbody className="text-gray-700 text-sm font-light">
                     {/* Example Row */}
-                    {loading ? (
+                     {loading ? (
                             <tr>
                                 <td colSpan="5" className="text-center py-4">Loading...</td>
                             </tr>
-                    ) : admin.length > 0 ? (
-                            admin.map((admin, index) => (
+                        ) : order.length > 0 ? (
+                            order.map((order, index) => (
                     <tr key={index} className="border-b border-gray-200 hover:bg-gray-50">
-                        <td className="py-3 px-6 text-left whitespace-nowrap">{admin.name}</td>
-                        <td className="py-3 px-6 text-left">{admin.email}</td>
-                        <td className="py-3 px-6 text-left">{admin.phone}</td>
-                        <td className="py-3 px-6 text-left">{admin.addressLine1}</td>
-                        <td className="py-3 px-6 text-left">Active</td>
+                        <td className="py-3 px-6 text-left whitespace-nowrap">{order.customerName}</td>
+                        <td className="py-3 px-6 text-left">{order.tShirtName}</td>
+                        <td className="py-3 px-6 text-left">{order.address}</td>
+                        <td className="py-3 px-6 text-left">{order.qty}</td>
+                        <td className="py-3 px-6 text-left">{order.date}</td>
+                        <td className="py-3 px-6 text-left">{order.status}</td>
                         <td className="py-3 px-6 text-center">
                             <button className="text-blue-500 hover:text-blue-700 mr-2"
-                            onClick={() => navigate(`/addUser/${admin._id}`)}
+                            onClick={() => navigate(`/addOrder/${order._id}`)}
                             >Edit</button>
                             <button className="text-red-500 hover:text-red-700"
-                            onClick={() => handleDelete(admin._id)}  
+                            onClick={() => handleDelete(order._id)}
                             >Delete</button>
                         </td>
                     </tr>
-                     ))
+                            ))
                         ) : (
-                            <tr>
-                                <td colSpan="5" className="text-center py-4 text-gray-400">No products found.</td>
-                            </tr>
+                    <tr>
+                        <td colSpan="5" className="py-12 px-6 text-center text-gray-400">No customers found.</td>
+                    </tr>
                         )}
                     </tbody>
                 </table>

@@ -11,6 +11,12 @@ import Login from "./login/login.jsx";
 import ForgotPassword from "./login/ForgotPassword.jsx";
 import ResetPassword from "./login/ResetPassword.jsx";
 import AddUser from "./user/dashboard/AddUser.jsx";
+import AddOrder from "./orders/components/AddOrder.jsx";
+import OrderDashboard from "./admin/dashboard/OrderDashboard.jsx";
+import ProductDashboard from "./admin/dashboard/ProductDashboard.jsx";
+import AddProduct from "./product/dashboard/AddProduct.jsx";
+import AboutUs from "./pages/AboutUs.jsx";
+import Design from "./DesignPage/dashboard/dashboard.jsx"
 
 
 const AppContent = () => {
@@ -34,6 +40,15 @@ const AppContent = () => {
         <Route path={"/forgot-password"} element={<ForgotPassword />} />
         <Route path={"/Reset-password"} element={<ResetPassword />} />
         <Route path={"/addUser"} element={<AddUser />} />
+        <Route path={"/addOrder"} element={<AddOrder />} />
+        <Route path={"/addUser/:id"} element={<AddUser />} />
+        <Route path={"/addOrder/:id"} element={<AddOrder />} />
+        <Route path={"/order"} element={<OrderDashboard />} />
+        <Route path={"/product"} element={<ProductDashboard />} />
+        <Route path={"/addProduct"} element={<AddProduct />} />
+        <Route path={"/addProduct/:id"} element={<AddProduct />} />
+        <Route path={"/aboutUs"} element={<AboutUs />} />
+        <Route path={"/design"} element={<Design />} />
       </Routes>
     </>
   );

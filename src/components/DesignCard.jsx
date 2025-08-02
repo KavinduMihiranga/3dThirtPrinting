@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 function DesignCard({ image, title, description }) {
   return (
@@ -8,7 +9,9 @@ function DesignCard({ image, title, description }) {
         <h2 className="text-xl font-semibold text-gray-800">{title}</h2>
         <p className="text-gray-600 text-sm mt-1">{description}</p>
         <button className="mt-4 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-          DESIGN
+          <Link to={"/design"}>
+           DESIGN
+          </Link>
         </button>
       </div>
     </div>

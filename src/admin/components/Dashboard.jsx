@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 
 export default function Dashboard() {
   return (
@@ -6,9 +7,9 @@ export default function Dashboard() {
       <h1 className="text-2xl font-semibold mb-2">Good Morning!</h1>
       <h2 className="text-xl mb-6">Kavindu</h2>
       <div className="space-x-4">
-        <button className="border px-4 py-2">Orders</button>
-        <button className="border px-4 py-2">Customers</button>
-        <button className="border px-4 py-2">Products</button>
+        <button className="border px-4 py-2"><Link to="/order">Orders</Link></button>
+        <button className="border px-4 py-2"><Link to="/customer">Customers</Link></button>
+        <button className="border px-4 py-2"><Link to="/customer">Products </Link></button>
       </div>
     </div>
   )

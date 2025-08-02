@@ -1,36 +1,148 @@
-import React, { use } from 'react';
-import { Form } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { useParams } from 'react-router-dom';
 
-function AddUser(props) {
+function AddUser() {
+  const { id } = useParams(); // get user ID for editing
+  const [isEdit, setIsEdit] = useState(false);
+  const [userSubmitted, setUserSubmitted] = useState(false);
 
-    const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    name: '',
+    gender: '',
+    email: '',
+    password: '',
+    nic: '',
+    phone: '',
+    addressLine1: '',
+    addressLine2: '',
+    city: '',
+    country: ''
+  });
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        alert('User added successfully!');
+  useEffect(() => {
+    if (id) {
+      setIsEdit(true);
+      fetchUserData(id);
     }
-    return (
-         <div className="w-[500px] mx-auto mt-10 border rounded-lg shadow-lg">
+  }, [id]);
+
+   const fetchUserData = async (userId) => {
+  try {
+    const res = await axios.get(`http://localhost:5000/api/admin/${userId}`);
+    if (res.data.data) {
+      setFormData(res.data.data); // adjust this based on your API response
+    } else {
+      console.error("User not found");
+    }
+  } catch (err) {
+    console.error('Error fetching user data:', err);
+  }
+};
+
+  const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = () => {
+    setUserSubmitted(true);
+
+    const payload = {
+      name: formData.name,
+      gender: formData.gender,
+      email: formData.email,
+      password: formData.password,
+      nic: formData.nic,
+      phone: formData.phone,
+      addressLine1: formData.addressLine1,
+      addressLine2: formData.addressLine2,
+      city: formData.city,
+      country: formData.country
+    };
+
+    if (isEdit) {
+ // Edit existing user
+      axios.put(`http://localhost:5000/api/admin/${id}`, payload)
+        .then((response) => {
+          console.log('User updated:', response.data);
+          setUserSubmitted(false);
+          navigate('/userDashboard');
+        })
+        .catch((error) => {
+          console.error('Error updating user:', error);
+          setUserSubmitted(false);
+        });
+    } else {
+      // Add new user
+      axios.post('http://localhost:5000/api/admin', payload)
+        .then((response) => {
+          console.log('User added:', response.data);
+          setUserSubmitted(false);
+          navigate('/userDashboard');
+        })
+        .catch((error) => {
+          console.error('Error adding user:', error);
+          setUserSubmitted(false);
+        });
+    
+    }
+
+    console.log('Adding user with payload:', payload);
+
+    axios.post('http://localhost:5000/api/admin', payload)
+      .then((response) => {
+        console.log('User added successfully:', response.data);
+        setUserSubmitted(false);
+        navigate('/userDashboard'); // optional
+      })
+      .catch((error) => {
+        console.error('Error adding user:', error);
+        setUserSubmitted(false);
+      });
+  };
+
+  return (
+    <div className="w-[500px] mx-auto mt-10 border rounded-lg shadow-lg">
       {/* Header */}
       <div className="bg-green-300 text-black font-semibold text-lg px-6 py-3 flex justify-between items-center rounded-t-lg">
-        <span>ADD User</span>
+        <span>{isEdit ? 'EDIT USER' : 'ADD USER'}</span>
         <button className="text-black text-xl font-bold hover:text-red-600"
-        onClick={()=> navigate(-1)}
-        >×</button>
+          onClick={() => navigate(-1)}>×</button>
       </div>
 
       {/* Form */}
-      <form className="p-6 space-y-4">
+      <form
+        className="p-6 space-y-4"
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSubmit();
+        }}
+      >
         {/* Row 1 */}
         <div className="flex gap-4">
           <div className="flex-1">
             <label className="block text-sm font-medium">Name</label>
-            <input type="text" className="w-full border rounded px-3 py-2" />
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              className="w-full border rounded px-3 py-2"
+            />
           </div>
           <div className="flex-1">
             <label className="block text-sm font-medium">Gender</label>
-            <input type="text" className="w-full border rounded px-3 py-2" />
+            <input
+              type="text"
+              name="gender"
+              value={formData.gender}
+              onChange={handleChange}
+              className="w-full border rounded px-3 py-2"
+            />
           </div>
         </div>
 
@@ -38,11 +150,23 @@ function AddUser(props) {
         <div className="flex gap-4">
           <div className="flex-1">
             <label className="block text-sm font-medium">Email Address</label>
-            <input type="email" className="w-full border rounded px-3 py-2" />
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              className="w-full border rounded px-3 py-2"
+            />
           </div>
           <div className="flex-1">
             <label className="block text-sm font-medium">Password</label>
-            <input type="password" className="w-full border rounded px-3 py-2" />
+            <input
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              className="w-full border rounded px-3 py-2"
+            />
           </div>
         </div>
 
@@ -50,30 +174,66 @@ function AddUser(props) {
         <div className="flex gap-4">
           <div className="flex-1">
             <label className="block text-sm font-medium">NIC</label>
-            <input type="text" className="w-full border rounded px-3 py-2" />
+            <input
+              type="text"
+              name="nic"
+              value={formData.nic}
+              onChange={handleChange}
+              className="w-full border rounded px-3 py-2"
+            />
           </div>
           <div className="flex-1">
             <label className="block text-sm font-medium">Phone Number</label>
-            <input type="tel" className="w-full border rounded px-3 py-2" />
+            <input
+              type="tel"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              className="w-full border rounded px-3 py-2"
+            />
           </div>
         </div>
 
-        {/* Single Column Fields */}
+        {/* Address */}
         <div>
           <label className="block text-sm font-medium">Address Line 1</label>
-          <input type="text" className="w-full border rounded px-3 py-2" />
+          <input
+            type="text"
+            name="addressLine1"
+            value={formData.addressLine1}
+            onChange={handleChange}
+            className="w-full border rounded px-3 py-2"
+          />
         </div>
         <div>
           <label className="block text-sm font-medium">Address Line 2</label>
-          <input type="text" className="w-full border rounded px-3 py-2" />
+          <input
+            type="text"
+            name="addressLine2"
+            value={formData.addressLine2}
+            onChange={handleChange}
+            className="w-full border rounded px-3 py-2"
+          />
         </div>
         <div>
-          <label className="block text-sm font-medium">City/State</label>
-          <input type="text" className="w-full border rounded px-3 py-2" />
+          <label className="block text-sm font-medium">City</label>
+          <input
+            type="text"
+            name="city"
+            value={formData.city}
+            onChange={handleChange}
+            className="w-full border rounded px-3 py-2"
+          />
         </div>
         <div>
           <label className="block text-sm font-medium">Country</label>
-          <input type="text" className="w-full border rounded px-3 py-2" />
+          <input
+            type="text"
+            name="country"
+            value={formData.country}
+            onChange={handleChange}
+            className="w-full border rounded px-3 py-2"
+          />
         </div>
 
         {/* Buttons */}
@@ -81,21 +241,20 @@ function AddUser(props) {
           <button
             type="button"
             className="border border-green-700 text-green-700 px-4 py-2 rounded hover:bg-green-100"
-            onClick={()=> navigate(-1)}
+            onClick={() => navigate(-1)}
           >
             Cancel
           </button>
           <button
             type="submit"
             className="bg-green-800 text-white px-4 py-2 rounded hover:bg-green-700"
-           
           >
-            Add Student
+             {isEdit ? 'Update' : 'Submit'}
           </button>
         </div>
       </form>
     </div>
-    );
+  );
 }
 
 export default AddUser;
