@@ -1,11 +1,8 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { Suspense, useThree } from '@react-three/drei';
+import { Suspense } from '@react-three/drei';
 import * as THREE from 'three';
-import { OrbitControls } from '@react-three/drei';
-import ErrorBoundary from '../components/ErrorBoundary';
-import WebGLChecker from '../components/WebGLChecker';
-import Loader from '../components/Loader';
+import { OrbitControls, useGLTF, Decal, Text } from '@react-three/drei';
 
 // TshirtModel Component
 const TshirtModel = ({ color, designs }) => {
@@ -114,48 +111,39 @@ const Scene = ({ tshirtColor, designs }) => {
   }, []);
 
   return (
-    <WebGLChecker
-      fallback={
-        <div style={sceneStyles.fallback}>
-          <h3>3D Content Not Available</h3>
-          <p>WebGL is required to display this content.</p>
-        </div>
-      }
-    >
-      <ErrorBoundary showDetails={process.env.NODE_ENV === 'development'}>
-        <Canvas
-          ref={canvasRef}
-          style={sceneStyles.canvas}
-          gl={{
-            preserveDrawingBuffer: true,
-            powerPreference: "high-performance",
-            antialias: true,
-            alpha: true
-          }}
-          dpr={[1, 2]}
-          camera={{ position: [5, 5, 5], fov: 45 }}
-          onCreated={({ gl }) => {
-            gl.setClearColor(0xf0f0f0, 1);
-          }}
-        >
-          <ambientLight intensity={0.6} />
-          <directionalLight position={[10, 10, 5]} intensity={1} />
-          <pointLight position={[-10, -10, -10]} intensity={0.5} />
-          
-          <Suspense fallback={<Loader />}>
-            <TshirtModel color={tshirtColor} designs={designs} />
-          </Suspense>
-          
-          <OrbitControls 
-            enablePan={true}
-            enableZoom={true}
-            enableRotate={true}
-            minDistance={3}
-            maxDistance={10}
-          />
-        </Canvas>
-      </ErrorBoundary>
-    </WebGLChecker>
+    <div style={{width: '100%', height: '100%', display: 'block'}}>
+      <Canvas
+        ref={canvasRef}
+        style={{width: '100%', height: '100%', display: 'block'}}
+        gl={{
+          preserveDrawingBuffer: true,
+          powerPreference: "high-performance",
+          antialias: true,
+          alpha: true
+        }}
+        dpr={[1, 2]}
+        camera={{ position: [5, 5, 5], fov: 45 }}
+        onCreated={({ gl }) => {
+          gl.setClearColor(0xf0f0f0, 1);
+        }}
+      >
+        <ambientLight intensity={0.6} />
+        <directionalLight position={[10, 10, 5]} intensity={1} />
+        <pointLight position={[-10, -10, -10]} intensity={0.5} />
+        
+        <Suspense fallback={null}>
+          <TshirtModel color={tshirtColor} designs={designs} />
+        </Suspense>
+        
+        <OrbitControls 
+          enablePan={true}
+          enableZoom={true}
+          enableRotate={true}
+          minDistance={3}
+          maxDistance={10}
+        />
+      </Canvas>
+    </div>
   );
 };
 
@@ -217,6 +205,7 @@ function Dashboard() {
                 preview: imageUrl
               }
             ]);
+            setSelectedDesignIndex(designs.length);
           },
           undefined,
           (error) => {
@@ -232,7 +221,7 @@ function Dashboard() {
       
       reader.readAsDataURL(file);
     }
-  }, []);
+  }, [designs.length]);
 
   const handleAddText = useCallback(() => {
     const text = prompt('Enter text for your T-shirt:');
@@ -248,13 +237,16 @@ function Dashboard() {
           rotation: [0, 0, 0]
         }
       ]);
+      setSelectedDesignIndex(designs.length);
     }
-  }, []);
+  }, [designs.length]);
 
   const handleRemoveDesign = useCallback((index) => {
     setDesigns(prev => prev.filter((_, i) => i !== index));
     if (selectedDesignIndex === index) {
       setSelectedDesignIndex(null);
+    } else if (selectedDesignIndex > index) {
+      setSelectedDesignIndex(selectedDesignIndex - 1);
     }
   }, [selectedDesignIndex]);
 
@@ -643,24 +635,5 @@ function Dashboard() {
     </div>
   );
 }
-
-const sceneStyles = {
-  canvas: {
-    width: '100%',
-    height: '100%',
-    display: 'block'
-  },
-  fallback: {
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center',
-    height: '100%',
-    backgroundColor: '#f0f0f0',
-    borderRadius: '8px',
-    padding: '20px',
-    textAlign: 'center'
-  }
-};
 
 export default Dashboard;
