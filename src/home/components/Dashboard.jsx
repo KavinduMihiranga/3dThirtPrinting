@@ -9,7 +9,7 @@ export default function Dashboard() {
       <div className="space-x-4">
         <button className="border px-4 py-2"><Link to="/order">Orders</Link></button>
         <button className="border px-4 py-2"><Link to="/customer">Customers</Link></button>
-        <button className="border px-4 py-2"><Link to="/customer">Products </Link></button>
+        <button className="border px-4 py-2"><Link to="/product">Products </Link></button>
       </div>
     </div>
   )

@@ -24,19 +24,23 @@ const NavItem = ({ icon, text, active, onclick }) => {
 
 export default function Sidebar({activation}) {
   const navigate = useNavigate();
-const handleUserButtonClick = () => {
-        console.log("User button clicked");
-        navigate("/userDashboard");
+  const handleAdminButtonClick = () => {
+        console.log("Admin button clicked");
+        navigate("/adminDashboard");
+    };
+    const handleCustomerButtonClick = () => {
+        console.log("Customer button clicked");
+        navigate("/customerDashboard");
     };
 
     const handleOrderButtonClick = () => {
         console.log("Product button clicked");
-        navigate("/order");
+        navigate("/orderDashboard");
     }
 
     const handleProductButtonClick = () => {
         console.log("Announcement button clicked");
-        navigate("/product");
+        navigate("/productDashboard");
     }
 
     const handleAnnouncementButtonClick = () => {
@@ -46,7 +50,7 @@ const handleUserButtonClick = () => {
 
 
   return (
-    <div className="bg-green-900 text-white w-64 min-h-screen p-4">
+    <div className="w-64 bg-green-800 text-white flex flex-col">
         <div className="flex justify-center mb-6 mt-4">
             <img
                 src={logo}
@@ -57,7 +61,8 @@ const handleUserButtonClick = () => {
         <h2 className="text-2xl font-bold text-center mb-8 tracking-wide">Admin Panel</h2>
 
       <nav className='space-y-4 mb-6'>
-      <NavItem icon={<User size={18}/>} text="Users" active={activation} onclick={handleUserButtonClick}/>
+      <NavItem icon={<User size={18}/>} text="Admin" active={activation} onclick={handleAdminButtonClick}/>
+      <NavItem icon={<User size={18}/>} text="Customer" active={activation} onclick={handleCustomerButtonClick}/>
       <NavItem icon={<NotebookText  size={18}/>} text="Order" active={activation} onclick={handleOrderButtonClick}/>
       <NavItem icon={<Shirt size={18}/>} text="Product" active={activation} onclick={handleProductButtonClick}/>
       <NavItem icon={<Megaphone  size={18}/>} text="Announcement" active={activation} onclick={handleAnnouncementButtonClick}/>

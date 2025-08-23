@@ -1,0 +1,156 @@
+import React, { useEffect, useState } from "react";
+import Sidebar from "../../home/components/Sidebar";
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
+import axios from "axios";
+
+function Dashboard() {
+  const [customer, setCustomer] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const navigate = useNavigate();
+
+  // Fetch customers
+  useEffect(() => {
+    getCustomer();
+  }, []);
+
+    const getCustomer = async () => {
+        try {
+            const res = await axios.get("http://localhost:5000/api/customer");
+            setCustomer(res.data.data || []);
+            setLoading(false);
+        } catch(error) {
+            console.error("Error fetching Customer:", error);
+            setLoading(false);
+        }
+    };
+
+  // Delete handler
+  const handleDelete = async (id) => {
+    const confirmDelete = window.confirm("Are you sure you want to delete this Customer?");
+        if (!confirmDelete) return;
+    try {
+      await axios.delete(`http://localhost:5000/api/customer/${id}`);
+      alert("Customer deleted successfully!");
+            getCustomer();
+    } catch (error) {
+      console.error("Delete Error:", error);
+        alert("Failed to delete customer.");
+    }
+  };
+
+   const filteredCustomer = customer.filter(customer => 
+        customer.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  // ✅ Return must be inside here
+  return (
+    <div className="flex min-h-screen">
+      {/* Sidebar */}
+      <Sidebar />
+
+      {/* Main Content */}
+      <div className="flex-1 bg-white p-6 rounded-lg shadow-md">
+        <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
+          <h1 className="text-3xl font-bold text-gray-800 flex items-center">
+            <ArrowLeft size={24} className="mr-3 text-gray-500" />
+            Customer Management
+          </h1>
+          <button className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out">
+            <a href="/addCustomer" className="flex items-center">
+              Add New Customer
+            </a>
+          </button>
+        </div>
+
+        {/* Search */}
+        <div className="mb-6 flex items-center space-x-4">
+          <input
+            type="text"
+            placeholder="Search Customer..."
+            className="flex-grow p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            />
+        </div>
+
+        {/* Table */}
+        <div className="overflow-x-auto">
+          <table className="min-w-full bg-white border border-gray-200 rounded-lg">
+            <thead>
+              <tr className="bg-gray-100 border-b border-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                <th className="py-3 px-6 text-left">Name</th>
+                <th className="py-3 px-6 text-left">Email</th>
+                <th className="py-3 px-6 text-left">Contact Number</th>
+                <th className="py-3 px-6 text-left">Address</th>
+                <th className="py-3 px-6 text-center">Status</th>
+                <th className="py-3 px-6 text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="text-gray-700 text-sm font-light">
+              {loading ? (
+                <tr>
+                  <td colSpan="6" className="text-center py-4">
+                    Loading...
+                  </td>
+                </tr>
+              ) : customer.length > 0 ? (
+                customer.map((customer, index) => (
+                  <tr
+                    key={index}
+                    className="border-b border-gray-200 hover:bg-gray-50"
+                  >
+                    <td className="py-3 px-6">{customer.name}</td>
+                    <td className="py-3 px-6">{customer.email}</td>
+                    <td className="py-3 px-6">{customer.phone}</td>
+                    <td className="py-3 px-6">{customer.addressLine1}</td>
+                    <td className="py-3 px-6">{customer.status}</td>
+                    <td className="py-3 px-6 text-center">
+                      <button
+                        className="text-blue-500 hover:text-blue-700 mr-2"
+                        onClick={() =>
+                          navigate(`/addCustomer/${customer._id}`)
+                        }
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="text-red-500 hover:text-red-700"
+                        onClick={() => handleDelete(customer._id)}
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan="6"
+                    className="text-center py-4 text-gray-400"
+                  >
+                    No Customer found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        <div className="flex justify-end items-center mt-6 text-gray-600">
+          <button
+            className="p-2 rounded-lg hover:bg-gray-200 disabled:opacity-50"
+            disabled
+          >
+            &lt;
+          </button>
+          <span className="mx-2">1 / 10</span>
+          <button className="p-2 rounded-lg hover:bg-gray-200">&gt;</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default Dashboard;

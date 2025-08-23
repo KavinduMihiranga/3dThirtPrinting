@@ -1,20 +1,46 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
-function CardComponent({ image, title, description }) {
+function CardComponent({ id, title, description, price, image, status, category, qty }) {
+  const navigate = useNavigate();
+
+  const handleBuyClick = () => {
+    navigate(`/product/${id}`, { 
+      state: { 
+        _id: id, // Change this to _id to match your API
+        title: title || 'No Title',
+        description: description || 'No Description',
+        price: price || 0,
+        image: image || '/default-image.jpg',
+        status: status || 'Unknown',
+        category: category || 'Uncategorized',
+        qty: qty || 0
+      } 
+    });
+  };
+  
   return (
-     <div className="w-1/4 max-w-sm rounded-lg overflow-hidden shadow-md bg-gray-600">
+    <div className="w-full max-w-sm rounded-lg overflow-hidden shadow-md bg-white">
       <img
         src={image}
         alt={title}
-        className="w-full h-48 object-cover"
+        className="w-full h-50 object-cover"
+        onError={(e) => {
+          e.target.src = '/default-image.jpg';
+        }}
       />
       <div className="p-4">
         <h2 className="text-xl font-semibold text-gray-800">{title}</h2>
-        <p className="text-gray-600 text-sm mt-1">{description}</p>
-        <button className="mt-4 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-          
-          <Link to={"/product"}>BUY</Link>
+        <p className="text-gray-600 text-sm mt-1 line-clamp-2">{description}</p>
+        <p className="text-gray-600 text-sm mt-1 line-clamp-2">{status}</p>
+        <p className="text-gray-600 text-sm mt-1 line-clamp-2">{category}</p>
+        <p className="text-gray-600 text-sm mt-1 line-clamp-2">{qty}</p>
+        <p className="text-green-600 font-bold mt-2">LKR {price.toLocaleString()}</p>
+        <button 
+          className="mt-4 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+          onClick={handleBuyClick}
+        >
+          Buy
         </button>
       </div>
     </div>

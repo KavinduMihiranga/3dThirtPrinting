@@ -1,9 +1,9 @@
 import React from 'react';
 import { ArrowLeft } from 'lucide-react';
-import Sidebar from "../../admin/components/Sidebar.jsx";
-import Dashboard from "../../user/components/Dashboard.jsx";
+import Sidebar from "../../home/components/Sidebar.jsx";
+import Dashboard from "../dashboard/Dashboard.jsx";
 
-function UserDashboard(props) {
+function CustomerDashboard(props) {
     return (
         <div className="flex h-screen">
             <Sidebar />
@@ -14,4 +14,4 @@ function UserDashboard(props) {
     );
 }
 
-export default UserDashboard;
+export default CustomerDashboard;

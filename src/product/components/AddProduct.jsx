@@ -7,6 +7,7 @@ function AddProduct() {
   const navigate = useNavigate();
   const [isEdit, setIsEdit] = useState(false);
   const [productSubmitted, setProductSubmitted] = useState(false);
+  const [imagePreview, setImagePreview] = useState(null);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -31,6 +32,10 @@ function AddProduct() {
       const res = await axios.get(`http://localhost:5000/api/product/${productId}`);
       if (res.data.data) {
         setFormData(res.data.data);
+        // Set image preview if image exists
+        if (res.data.data.image) {
+          setImagePreview(`http://localhost:5000${res.data.data.image}`);
+        }
       } else {
         console.error("Product not found");
       }
@@ -41,10 +46,26 @@ function AddProduct() {
 
   const handleChange = (e) => {
     const { name, value, type, files } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "file" ? files[0] : value,
-    }));
+    
+    if (type === "file" && files[0]) {
+      const file = files[0];
+      setFormData((prev) => ({
+        ...prev,
+        [name]: file,
+      }));
+      
+      // Create image preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -79,7 +100,7 @@ function AddProduct() {
         console.log("Product added");
       }
       setProductSubmitted(false);
-      navigate("/product");
+      navigate("/productDashboard");
     } catch (error) {
       console.error("Error saving product:", error);
       setProductSubmitted(false);
@@ -98,6 +119,19 @@ function AddProduct() {
 
       {/* Form */}
       <form className="p-6 space-y-4" onSubmit={handleSubmit}>
+        {/* Image Preview */}
+        {imagePreview && (
+          <div className="flex justify-center">
+            <div className="w-32 h-32 border rounded-md overflow-hidden">
+              <img 
+                src={imagePreview} 
+                alt="Preview" 
+                className="w-full h-full object-cover"
+              />
+            </div>
+          </div>
+        )}
+
         <div className="flex gap-4">
           <div className="flex-1">
             <label className="block text-sm font-medium">Product Name</label>

@@ -1,18 +1,16 @@
 import React from 'react';
 import Sidebar from '../components/Sidebar'
-import Header from '../components/Header'
-import Dashboard from '../../product/dashboard/Dashboard.jsx';
+import Dashboard from '../../home/components/Dashboard.jsx';
 
-function ProductDashboard(props) {
+function AdminDashboard(props) {
     return (
         <div className='flex h-screen'>
             <Sidebar />
             <div className='flex flex-col flex-1'>
-                <Header/>
                 <Dashboard/>
-                </div>
+            </div>
         </div>
     );
 }
 
-export default ProductDashboard;
+export default AdminDashboard;

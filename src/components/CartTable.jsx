@@ -1,30 +1,32 @@
 import React,{ useState }  from 'react';
 import { TrashIcon } from "@heroicons/react/24/outline";
 import TshirtImg from "../assets/TshirtPrintingImg.jpg";
+import { useCart } from "../pages/CartContext";
 
 function CartTable(props) {
-   const [cartItems, setCartItems] = useState([
-    {
-      id: 1,
-      name: "PUBG Gaming T-shirt",
-      size: "Medium",
-      qty: 1,
-      price: 2000,
-      image: TshirtImg,
-    },
-  ]);
+  //  const [cartItems, setCartItems] = useState([
+  //   {
+  //     id: 1,
+  //     name: "PUBG Gaming T-shirt",
+  //     size: "Medium",
+  //     qty: 1,
+  //     price: 2000,
+  //     image: TshirtImg,
+  //   },
+  // ]);
+  const { cartItems, updateQuantity, removeItem } = useCart();
 
-   const updateQuantity = (id, amount) => {
-    setCartItems((prevItems) =>
-      prevItems.map((item) =>
-        item.id === id ? { ...item, qty: Math.max(1, item.qty + amount) } : item
-      )
-    );
-  };
+  //  const updateQuantity = (id, amount) => {
+  //   setCartItems((prevItems) =>
+  //     prevItems.map((item) =>
+  //       item.id === id ? { ...item, qty: Math.max(1, item.qty + amount) } : item
+  //     )
+  //   );
+  // };
 
-  const removeItem = (id) => {
-    setCartItems(cartItems.filter((item) => item.id !== id));
-  };
+  // const removeItem = (id) => {
+  //   setCartItems(cartItems.filter((item) => item.id !== id));
+  // };
 
     return (
          <div className="container mx-auto p-6">

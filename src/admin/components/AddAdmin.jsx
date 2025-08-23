@@ -1,12 +1,12 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { useParams } from 'react-router-dom';
+import React, { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import axios from "axios";
 
 function AddUser() {
   const { id } = useParams(); // get user ID for editing
+  const navigate = useNavigate();
   const [isEdit, setIsEdit] = useState(false);
-  const [userSubmitted, setUserSubmitted] = useState(false);
+  const [adminSubmitted, setAdminSubmitted] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -24,104 +24,66 @@ function AddUser() {
   useEffect(() => {
     if (id) {
       setIsEdit(true);
-      fetchUserData(id);
+      fetchAdminData(id);
     }
   }, [id]);
 
-   const fetchUserData = async (userId) => {
-  try {
-    const res = await axios.get(`http://localhost:5000/api/admin/${userId}`);
-    if (res.data.data) {
-      setFormData(res.data.data); // adjust this based on your API response
-    } else {
-      console.error("User not found");
+  const fetchAdminData = async (userId) => {
+    try {
+      const res = await axios.get(`http://localhost:5000/api/admin/${userId}`);
+      if (res.data.data) {
+        setFormData(res.data.data);
+      } else {
+        console.error("User not found");
+      }
+    } catch (err) {
+      console.error('Error fetching user data:', err);
     }
-  } catch (err) {
-    console.error('Error fetching user data:', err);
-  }
-};
-
-  const navigate = useNavigate();
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
-  const handleSubmit = () => {
-    setUserSubmitted(true);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setAdminSubmitted(true);
 
-    const payload = {
-      name: formData.name,
-      gender: formData.gender,
-      email: formData.email,
-      password: formData.password,
-      nic: formData.nic,
-      phone: formData.phone,
-      addressLine1: formData.addressLine1,
-      addressLine2: formData.addressLine2,
-      city: formData.city,
-      country: formData.country
-    };
-
-    if (isEdit) {
- // Edit existing user
-      axios.put(`http://localhost:5000/api/admin/${id}`, payload)
-        .then((response) => {
-          console.log('User updated:', response.data);
-          setUserSubmitted(false);
-          navigate('/userDashboard');
-        })
-        .catch((error) => {
-          console.error('Error updating user:', error);
-          setUserSubmitted(false);
-        });
-    } else {
-      // Add new user
-      axios.post('http://localhost:5000/api/admin', payload)
-        .then((response) => {
-          console.log('User added:', response.data);
-          setUserSubmitted(false);
-          navigate('/userDashboard');
-        })
-        .catch((error) => {
-          console.error('Error adding user:', error);
-          setUserSubmitted(false);
-        });
-    
+    try {
+      if (isEdit) {
+        await axios.put(`http://localhost:5000/api/admin/${id}`, formData);
+        console.log("Admin updated");
+      } else {
+        await axios.post("http://localhost:5000/api/admin", formData);
+        console.log("Admin added");
+      }
+      setAdminSubmitted(false);
+      navigate("/adminDashboard");
+    } catch (error) {
+      console.error("Error saving admin:", error);
+      setAdminSubmitted(false);
     }
-
-    console.log('Adding user with payload:', payload);
-
-    axios.post('http://localhost:5000/api/admin', payload)
-      .then((response) => {
-        console.log('User added successfully:', response.data);
-        setUserSubmitted(false);
-        navigate('/userDashboard'); // optional
-      })
-      .catch((error) => {
-        console.error('Error adding user:', error);
-        setUserSubmitted(false);
-      });
   };
 
   return (
     <div className="w-[500px] mx-auto mt-10 border rounded-lg shadow-lg">
       {/* Header */}
       <div className="bg-green-300 text-black font-semibold text-lg px-6 py-3 flex justify-between items-center rounded-t-lg">
-        <span>{isEdit ? 'EDIT USER' : 'ADD USER'}</span>
-        <button className="text-black text-xl font-bold hover:text-red-600"
-          onClick={() => navigate(-1)}>×</button>
+        <span>{isEdit ? 'EDIT ADMIN' : 'ADD ADMIN'}</span>
+        <button 
+          className="text-black text-xl font-bold hover:text-red-600"
+          onClick={() => navigate(-1)}
+        >
+          ×
+        </button>
       </div>
 
       {/* Form */}
-      <form
-        className="p-6 space-y-4"
-        onSubmit={(e) => {
-          e.preventDefault();
-          handleSubmit();
-        }}
-      >
+      <form className="p-6 space-y-4" onSubmit={handleSubmit}>
         {/* Row 1 */}
         <div className="flex gap-4">
           <div className="flex-1">
@@ -132,17 +94,23 @@ function AddUser() {
               value={formData.name}
               onChange={handleChange}
               className="w-full border rounded px-3 py-2"
+              required
             />
           </div>
           <div className="flex-1">
             <label className="block text-sm font-medium">Gender</label>
-            <input
-              type="text"
+            <select
               name="gender"
               value={formData.gender}
               onChange={handleChange}
               className="w-full border rounded px-3 py-2"
-            />
+              required
+            >
+              <option value="">Select Gender</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
           </div>
         </div>
 
@@ -156,6 +124,7 @@ function AddUser() {
               value={formData.email}
               onChange={handleChange}
               className="w-full border rounded px-3 py-2"
+              required
             />
           </div>
           <div className="flex-1">
@@ -166,6 +135,7 @@ function AddUser() {
               value={formData.password}
               onChange={handleChange}
               className="w-full border rounded px-3 py-2"
+              required={!isEdit}
             />
           </div>
         </div>
@@ -180,6 +150,7 @@ function AddUser() {
               value={formData.nic}
               onChange={handleChange}
               className="w-full border rounded px-3 py-2"
+              required
             />
           </div>
           <div className="flex-1">
@@ -190,6 +161,7 @@ function AddUser() {
               value={formData.phone}
               onChange={handleChange}
               className="w-full border rounded px-3 py-2"
+              required
             />
           </div>
         </div>
@@ -203,6 +175,7 @@ function AddUser() {
             value={formData.addressLine1}
             onChange={handleChange}
             className="w-full border rounded px-3 py-2"
+            required
           />
         </div>
         <div>
@@ -223,6 +196,7 @@ function AddUser() {
             value={formData.city}
             onChange={handleChange}
             className="w-full border rounded px-3 py-2"
+            required
           />
         </div>
         <div>
@@ -233,6 +207,7 @@ function AddUser() {
             value={formData.country}
             onChange={handleChange}
             className="w-full border rounded px-3 py-2"
+            required
           />
         </div>
 
@@ -245,11 +220,8 @@ function AddUser() {
           >
             Cancel
           </button>
-          <button
-            type="submit"
-            className="bg-green-800 text-white px-4 py-2 rounded hover:bg-green-700"
-          >
-             {isEdit ? 'Update' : 'Submit'}
+          <button type="submit" className="bg-green-800 text-white px-4 py-2 rounded hover:bg-green-700">
+            {isEdit ? "Update" : "Submit"}
           </button>
         </div>
       </form>
