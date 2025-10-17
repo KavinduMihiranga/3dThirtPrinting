@@ -31,27 +31,32 @@ function Dashboard(props) {
 
   return (
     <>
+    {/* Optional: Keep your design card if needed */}
+       
       <div className="flex gap-4 flex-row justify-between items-center p-4 w-full flex-wrap">
-        {products.map((product) => (
-          <CardComponent
-            key={product._id} // Use _id instead of id for MongoDB
-            image={
-              product.image 
-                ? `http://localhost:5000${product.image}` // Full URL to the image
-                : TshirtImg // Fallback image
-            }
-            title={product.name}
-            description={product.description}
-            price={product.price}
-          />
-        ))}
         
-        {/* Optional: Keep your design card if needed */}
-        <DesignCard
+         <DesignCard
           image={DesignImg}
           title="Design 03"
           description="Design T-shirt03"
         />
+        {products.map((product) => (
+            <CardComponent
+              key={product._id}
+              id={product._id}
+              title={product.title || product.name}
+              description={product.description}
+              price={product.price}
+              image={
+                product.image?.startsWith("http")
+                  ? product.image
+                  : `http://localhost:5000${product.image}`
+              }
+              status={product.status}
+              category={product.category}
+              qty={product.qty}
+            />
+          ))}
       </div>
 
       <div className="p-6">

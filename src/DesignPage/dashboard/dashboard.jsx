@@ -1,23 +1,73 @@
 import React, { useState, useRef, useCallback } from "react";
 import Scene from "../components/Scene";
 import * as THREE from "three";
+import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
+import { saveAs } from "file-saver"; 
+import axios from "axios";
 
 function Dashboard() {
   const [tshirtColor, setTshirtColor] = useState("#3b82f6");
   const [designs, setDesigns] = useState([]);
   const [selectedDesignIndex, setSelectedDesignIndex] = useState(null);
+  const [orders, setOrders] = useState([]);
   const [sizes, setSizes] = useState({
     XS: 0, S: 0, M: 0, L: 0, XL: 0, "2XL": 0, "3XL": 0,
   });
+  const [exportStatus, setExportStatus] = useState({ isExporting: false, message: "" });
 
   const fileInputRef = useRef(null);
   const colorOptions = [
     "#000000","#ffffff","#ef4444","#10b981","#3b82f6",
     "#f59e0b","#8b5cf6","#06b6d4","#f97316","#6366f1",
   ];
+  const canvasRef = useRef();
+
+  // Enhanced Download as GLB (3D model) with error handling
+   const handleDownloadGLB = () => {
+    if (!canvasRef.current?.tshirtGroup) return;
+
+    const exporter = new GLTFExporter();
+    exporter.parse(
+      canvasRef.current.tshirtGroup,
+      (result) => {
+        const blob = new Blob([result], { type: "model/gltf-binary" });
+        saveAs(blob, "tshirt.glb");
+      },
+      { binary: true }
+    );
+  };
+
+  // Download as GLTF (JSON format)
+  const handleDownloadGLTF = () => {
+    if (!canvasRef.current?.tshirtGroup) return;
+
+    const exporter = new GLTFExporter();
+    exporter.parse(
+      canvasRef.current.tshirtGroup,
+      (result) => {
+        const output = JSON.stringify(result, null, 2);
+        const blob = new Blob([output], { type: "application/json" });
+        saveAs(blob, "tshirt.gltf");
+      },
+      { binary: false }
+    );
+  };
+
+   // 👉 Export PNG (snapshot)
+  const handleDownloadPNG = () => {
+    if (!canvasRef.current?.gl) return;
+
+    const renderer = canvasRef.current.gl;
+    const dataURL = renderer.domElement.toDataURL("image/png");
+
+    const link = document.createElement("a");
+    link.href = dataURL;
+    link.download = "tshirt.png";
+    link.click();
+  };
 
   // Image upload -> GPU texture
-  const handleImageUpload = useCallback((event) => {
+   const handleImageUpload = useCallback((event) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -38,6 +88,9 @@ function Dashboard() {
       loader.load(
         imageUrl,
         (texture) => {
+          // Ensure texture is fully loaded before adding to designs :cite[10]
+          texture.needsUpdate = true;
+          
           // three r150+: colorSpace; older: encoding
           if ("colorSpace" in texture) texture.colorSpace = THREE.SRGBColorSpace;
           else texture.encoding = THREE.sRGBEncoding;
@@ -183,9 +236,65 @@ function Dashboard() {
   const selectedDesign =
     selectedDesignIndex != null ? designs[selectedDesignIndex] : null;
 
+  // Save & Order function
+  const handleSaveOrder = async () => {
+    if (!canvasRef.current?.tshirtGroup) return;
+
+    // Export T-shirt model as GLB blob
+    const exporter = new GLTFExporter();
+    exporter.parse(
+      canvasRef.current.tshirtGroup,
+      async (result) => {
+        const blob = new Blob([result], { type: "model/gltf-binary" });
+
+        // convert blob to Base64 (or upload to server as FormData)
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+          const glbBase64 = reader.result;
+
+          const orderData = {
+            // tshirtColor,
+            // designs,
+            // model: glbBase64, // or upload separately
+            // customer: {
+            //   name: "John Doe", // in real app from login / form
+            //   email: "john@example.com",
+            // },
+              customerName: "John Doe1",           // you can replace with form input
+              tShirtName: "Custom T-shirt1",
+              address: "123 Street, City1",
+              qty: totalItems,
+              date: new Date(),
+              status: "Processing",
+              designFile: "",   
+          };
+
+          try {
+            const res = await axios.post("http://localhost:5000/api/order", orderData);
+            alert(`Order placed successfully! ID: ${response.data.data._id}`);
+          } catch (err) {
+            console.error("Error placing order", err);
+            alert("Failed to place order");
+          }
+        };
+        reader.readAsDataURL(blob);
+      },
+      { binary: true }
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 p-4 md:p-6">
-      <div className="max-w-7xl mx-auto bg-white p-4 md:p-6 rounded-xl shadow-md grid grid-cols-1 lg:grid-cols-5 gap-4 md:gap-6">
+      {/* Export Status Indicator */}
+      {exportStatus.message && (
+        <div className={`fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
+          exportStatus.isExporting ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800"
+        }`}>
+          {exportStatus.message}
+        </div>
+      )}
+      
+       <div className="max-w-7xl mx-auto bg-white p-4 md:p-6 rounded-xl shadow-md grid grid-cols-1 lg:grid-cols-5 gap-4 md:gap-6">
         {/* Left Panel */}
         <div className="col-span-1 space-y-3">
           <div className="space-y-2">
@@ -219,6 +328,8 @@ function Dashboard() {
               />
               Add Image
             </label>
+
+           
 
             {designs.length > 0 && (
               <button
@@ -404,7 +515,11 @@ function Dashboard() {
 
         {/* Center 3D Preview */}
         <div className="col-span-3 h-80 lg:h-[500px] bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg relative overflow-hidden">
-          <Scene tshirtColor={tshirtColor} designs={designs} />
+          <Scene 
+            tshirtColor={tshirtColor} 
+            designs={designs} 
+            ref={canvasRef}
+          />
           <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 text-center text-xs text-gray-600 bg-white/80 px-3 py-1 rounded-full backdrop-blur-sm">
             🖱️ Drag to rotate • 🔍 Scroll to zoom
           </div>
@@ -421,16 +536,7 @@ function Dashboard() {
 
         {/* Right Panel (order + sizes) */}
         <div className="col-span-1 space-y-4">
-          <button
-            onClick={() => {
-              if (totalItems === 0) return alert("Please add at least one item");
-              alert(`Order placed successfully! Total: Rs ${calculatePrice()}.00`);
-            }}
-            disabled={totalItems === 0}
-            className="bg-green-600 text-white px-4 py-3 rounded-lg w-full hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
-          >
-            💾 Save and Order
-          </button>
+          <button onClick={handleSaveOrder}>Save & Order</button>
 
           <div className="bg-gray-100 rounded-lg p-3 md:p-4 text-center">
             <div className="text-sm font-medium mb-2">Selected Color</div>
@@ -466,6 +572,15 @@ function Dashboard() {
         </div>
       </div>
 
+        {/* Export Options */}
+            <div>
+      
+      <div className="mt-4 flex gap-2">
+        <button onClick={handleDownloadGLB}>Download GLB</button>
+        <button onClick={handleDownloadGLTF}>Download GLTF</button>
+        {/* <button onClick={handleDownloadPNG}>Download PNG</button> */}
+      </div>
+    </div>
       {/* Price Summary */}
       <div className="max-w-7xl mx-auto mt-4 md:mt-6 p-4 md:p-6 bg-white rounded-lg shadow flex justify-between items-center">
         <div>

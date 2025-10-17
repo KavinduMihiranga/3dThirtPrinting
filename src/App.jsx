@@ -20,9 +20,11 @@ import AboutUs from "./pages/AboutUs.jsx";
 import Design from "./DesignPage/dashboard/dashboard.jsx";
 import ProductDetail from "./product/components/ProductDetail.jsx";
 import AdminHomePage from "./home/dashboard/AdminHomePage.jsx";
-// import AnnouncementPage from './pages/AnnouncementPage';
-// import AddAnnouncement from './components/announcements/AddAnnouncement';
-// import EditAnnouncement from './components/announcements/EditAnnouncement';
+import PaymentGateway from "./paymentGateway/PaymentGateway.jsx"; // Added payment gateway
+import PaymentSuccess from "./paymentGateway/PaymentSuccess.jsx"; // Added payment success page
+import AnnouncementDashboard from "./announcement/dashboard/Dashboard.jsx"
+import AddAnnouncement from "./announcement/components/AddAnnouncement.jsx";
+import EditAnnouncement from "./announcement/components/EditAnnouncement.jsx";
 
 const AppContent = () => {
   const location = useLocation();
@@ -37,7 +39,12 @@ const AppContent = () => {
     "/productDashboard", 
     "/addProduct", 
     "/addCustomer", 
-    "/addOrder"
+    "/addOrder",
+    "/payment", // Added payment route
+    "/payment-success", // Added payment success route
+    "/announcementDashboard", // Added announcement route
+    "/addAnnouncement", // Added add announcement route
+    "/editAnnouncements/:id" // Added edit announcement route
   ];
 
   return (
@@ -54,6 +61,10 @@ const AppContent = () => {
         <Route path="/aboutUs" element={<AboutUs />} />
         <Route path="/design" element={<Design />} />
         <Route path="/product/:id" element={<ProductDetail />} />
+        
+        {/* Payment Routes */}
+        <Route path="/payment" element={<PaymentGateway />} />
+        <Route path="/payment-success" element={<PaymentSuccess />} />
 
         {/* Auth Routes */}
         <Route path="/login" element={<Login />} />
@@ -80,11 +91,11 @@ const AppContent = () => {
         <Route path="/orderDashboard" element={<OrderDashboard />} />
         <Route path="/addOrder" element={<AddOrder />} />
         <Route path="/addOrder/:id" element={<AddOrder />} />
-
-        {/* <Route path="/announcements" element={<AnnouncementPage />} />
-        <Route path="/addAnnouncement" element={<AddAnnouncement />} />
-        <Route path="/editAnnouncement/:id" element={<EditAnnouncement />} /> */}
         
+        {/* Announcement Route */}
+        <Route path="/announcements" element={<AnnouncementDashboard />} />
+        <Route path="/addAnnouncement" element={<AddAnnouncement />} />
+        <Route path="/editAnnouncements/:id" element={<EditAnnouncement />} />
       </Routes>
     </>
   );

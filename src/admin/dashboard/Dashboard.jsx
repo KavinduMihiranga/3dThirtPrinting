@@ -3,12 +3,45 @@ import Sidebar from '../../home/components/Sidebar.jsx';
 import { ArrowLeft } from 'lucide-react';
 import axios from "axios";
 import { useNavigate } from 'react-router-dom';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 
 function Dashboard() {
     const [admin, setAdmin] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const navigate = useNavigate();
+
+
+  // ✅ Export admin as Excel file
+const exportToExcel = () => {
+  if (!admin || admin.length === 0) {
+    alert("No data available to export!");
+    return;
+  }
+
+  // Convert announcement objects into sheet data
+  const dataToExport = admin.map((a, index) => ({
+    "No": index + 1,
+    "Name": a.name,
+    "Email": a.email,
+    "Phone": a.phone,
+    "NIC": a.nic,
+    "Status": a.status,
+    "Created Date": new Date(a.createdAt).toLocaleDateString(),
+  }));
+
+  // Create worksheet and workbook
+  const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Admins");
+
+  // Convert workbook to binary and trigger download
+  const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+  const data = new Blob([excelBuffer], { type: "application/octet-stream" });
+  saveAs(data, "Admins_Report.xlsx");
+};
+
 
     useEffect(() => {
         getAdmins();  
@@ -59,12 +92,20 @@ function Dashboard() {
                         />
                         Admin Management
                     </h1>
+                    <div className="flex space-x-3">
+                        <button
+                        onClick={exportToExcel}
+                        className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
+                        >
+                        Export Excel
+                    </button>
                     <button 
                         className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
                         onClick={() => navigate("/addAdmin")}
                     >
                         Add New Admin
                     </button>
+                </div>
                 </div>
 
                 <div className="mb-6 flex items-center space-x-4">

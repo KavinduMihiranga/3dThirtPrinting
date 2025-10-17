@@ -1,11 +1,46 @@
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useThree, extend, useFrame } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import TshirtModel from "./TshirtModel";
 import * as THREE from "three";
-import { Suspense, useEffect, useRef } from "react";
+import { Suspense, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 
-export default function Scene({ tshirtColor, designs }) {
+// Forward ref component to expose Three.js objects
+const SceneContent = forwardRef(({ tshirtColor, designs }, ref) => {
+  const { scene, gl, camera } = useThree();
+  const groupRef = useRef();
+  
+  // Expose necessary properties to parent via ref
+  useImperativeHandle(ref, () => ({
+    scene:scene,
+    gl,
+    camera,
+    tshirtGroup: groupRef.current
+  }), [scene, gl, camera]);
+
+  return (
+    <>
+      <ambientLight intensity={0.6} />
+      <directionalLight position={[10, 10, 5]} intensity={1.1} />
+      <pointLight position={[-10, -10, -10]} intensity={0.5} />
+
+      <group ref={groupRef}>
+        <TshirtModel color={tshirtColor} designs={designs} />
+      </group>
+    </>
+  );
+});
+
+// Main Scene component
+const Scene = forwardRef(({ tshirtColor, designs }, ref) => {
   const canvasRef = useRef(null);
+  const sceneContentRef = useRef();
+
+  useImperativeHandle(ref, () => ({
+    scene: sceneContentRef.current?.scene || null,
+    gl: canvasRef.current?.gl || null,
+    camera: sceneContentRef.current?.camera || null,
+    tshirtGroup: sceneContentRef.current?.tshirtGroup || null,
+  }));
 
   useEffect(() => {
     const canvas = canvasRef.current?.gl?.domElement;
@@ -27,7 +62,7 @@ export default function Scene({ tshirtColor, designs }) {
     };
   }, []);
 
-  return (
+   return (
     <Canvas
       ref={canvasRef}
       style={{ width: "100%", height: "100%", display: "block" }}
@@ -37,30 +72,27 @@ export default function Scene({ tshirtColor, designs }) {
         antialias: true,
         alpha: true,
         powerPreference: "high-performance",
-        preserveDrawingBuffer: false,
+        preserveDrawingBuffer: true, // required for PNG export
       }}
       onCreated={({ gl }) => {
-        // Color space compatibility across three versions
         if ("outputColorSpace" in gl) gl.outputColorSpace = THREE.SRGBColorSpace;
         else gl.outputEncoding = THREE.sRGBEncoding;
         gl.setClearColor(0xf0f0f0, 1);
       }}
     >
-      <ambientLight intensity={0.6} />
-      <directionalLight position={[10, 10, 5]} intensity={1.1} />
-      <pointLight position={[-10, -10, -10]} intensity={0.5} />
-
       <Suspense fallback={null}>
-        <TshirtModel color={tshirtColor} designs={designs} />
+        <SceneContent
+          ref={sceneContentRef}
+          tshirtColor={tshirtColor}
+          designs={designs}
+        />
       </Suspense>
 
-      <OrbitControls
-        enablePan
-        enableZoom
-        enableRotate
-        minDistance={3}
-        maxDistance={10}
-      />
+      <OrbitControls enablePan enableZoom enableRotate minDistance={3} maxDistance={10} />
     </Canvas>
   );
-}
+});
+
+Scene.displayName = "Scene";
+
+export default Scene;

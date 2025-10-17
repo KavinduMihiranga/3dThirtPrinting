@@ -1,35 +1,15 @@
-import React,{ useState }  from 'react';
+import React from 'react';
 import { TrashIcon } from "@heroicons/react/24/outline";
 import TshirtImg from "../assets/TshirtPrintingImg.jpg";
 import { useCart } from "../pages/CartContext";
+import { useNavigate } from "react-router-dom";
 
 function CartTable(props) {
-  //  const [cartItems, setCartItems] = useState([
-  //   {
-  //     id: 1,
-  //     name: "PUBG Gaming T-shirt",
-  //     size: "Medium",
-  //     qty: 1,
-  //     price: 2000,
-  //     image: TshirtImg,
-  //   },
-  // ]);
+  const navigate = useNavigate();
   const { cartItems, updateQuantity, removeItem } = useCart();
 
-  //  const updateQuantity = (id, amount) => {
-  //   setCartItems((prevItems) =>
-  //     prevItems.map((item) =>
-  //       item.id === id ? { ...item, qty: Math.max(1, item.qty + amount) } : item
-  //     )
-  //   );
-  // };
-
-  // const removeItem = (id) => {
-  //   setCartItems(cartItems.filter((item) => item.id !== id));
-  // };
-
-    return (
-         <div className="container mx-auto p-6">
+  return (
+    <div className="container mx-auto p-6">
       <h1 className="text-3xl font-bold mb-4">Shopping Cart</h1>
       <table className="w-full border-collapse border border-gray-300">
         <thead>
@@ -39,6 +19,7 @@ function CartTable(props) {
             <th className="p-3 border">Size</th>
             <th className="p-3 border">Qty</th>
             <th className="p-3 border">Unit Price</th>
+            <th className="p-3 border">Total Price</th>
             <th className="p-3 border">Action</th>
           </tr>
         </thead>
@@ -66,6 +47,9 @@ function CartTable(props) {
                 </button>
               </td>
               <td className="p-3 border">Rs. {item.price}</td>
+              <td className="p-3 border font-semibold text-green-700">
+                Rs. {item.qty * item.price}
+              </td>
               <td className="p-3 border">
                 <button
                   className="text-red-500 hover:text-red-700"
@@ -80,15 +64,15 @@ function CartTable(props) {
       </table>
 
       <div className="flex justify-end mt-6">
-        <button className="px-6 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+        <button
+          className="px-6 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+          onClick={() => navigate('/checkoutPage')}
+        >
           Checkout
         </button>
       </div>
     </div>
-
-    
-
-    );
+  );
 }
 
 export default CartTable;

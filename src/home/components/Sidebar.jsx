@@ -45,7 +45,7 @@ export default function Sidebar({activation}) {
 
     const handleAnnouncementButtonClick = () => {
         console.log("Announcement button clicked");
-        navigate("/announcement");
+        navigate("/announcements");
     }
 
 

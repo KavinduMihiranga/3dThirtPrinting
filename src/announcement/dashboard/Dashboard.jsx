@@ -1,13 +1,45 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import Sidebar from '../../home/components/Sidebar.jsx';
+import { ArrowLeft } from 'lucide-react'; // ✅ for the icon (if you use lucide-react)
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 
-function AnnouncementPage() {
+function Dashboard() {
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
+
+  // ✅ Export announcements as Excel file
+const exportToExcel = () => {
+  if (!announcements || announcements.length === 0) {
+    alert("No data available to export!");
+    return;
+  }
+
+  // Convert announcement objects into sheet data
+  const dataToExport = announcements.map((a, index) => ({
+    "No": index + 1,
+    "Title": a.title,
+    "Content": a.content,
+    "Created Date": new Date(a.createdAt).toLocaleDateString(),
+  }));
+
+  // Create worksheet and workbook
+  const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Announcements");
+
+  // Convert workbook to binary and trigger download
+  const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+  const data = new Blob([excelBuffer], { type: "application/octet-stream" });
+  saveAs(data, "Announcements_Report.xlsx");
+};
+
+  // ✅ Fetch announcements from backend
   useEffect(() => {
     const fetchAnnouncements = async () => {
       try {
@@ -22,10 +54,11 @@ function AnnouncementPage() {
     fetchAnnouncements();
   }, []);
 
+  // ✅ Delete an announcement
   const handleDelete = async (id) => {
     try {
       await axios.delete(`http://localhost:5000/api/announcements/${id}`);
-      setAnnouncements(announcements.filter(announcement => announcement._id !== id));
+      setAnnouncements((prev) => prev.filter((a) => a._id !== id));
     } catch (err) {
       setError(err.message);
     }
@@ -35,56 +68,103 @@ function AnnouncementPage() {
   if (error) return <div className="text-center py-8 text-red-500">Error: {error}</div>;
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Announcements</h1>
-        <button
-          onClick={() => navigate('/addAnnouncement')}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded"
-        >
-          Add New Announcement
-        </button>
-      </div>
+    <div className="flex min-h-screen bg-gray-100">
+      {/* ✅ Sidebar Section */}
+      <Sidebar />
 
-      <div className="bg-white shadow rounded-lg overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Content</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {announcements.map((announcement) => (
-              <tr key={announcement._id}>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{announcement.title}</td>
-                <td className="px-6 py-4 text-sm text-gray-500">{announcement.content.substring(0, 50)}...</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {new Date(announcement.createdAt).toLocaleDateString()}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <button
-                    onClick={() => navigate(`/editAnnouncement/${announcement._id}`)}
-                    className="text-indigo-600 hover:text-indigo-900 mr-4"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(announcement._id)}
-                    className="text-red-600 hover:text-red-900"
-                  >
-                    Delete
-                  </button>
-                </td>
+      {/* ✅ Main Content Section */}
+      <div className="flex-1 bg-white p-6 rounded-lg shadow-md overflow-y-auto">
+        <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
+          <h1 className="text-3xl font-bold text-gray-800 flex items-center">
+            <ArrowLeft
+              size={24}
+              className="mr-3 text-gray-500 cursor-pointer"
+              onClick={() => navigate(-1)}
+            />
+            Announcement Management
+          </h1>
+          <div className="flex space-x-3">
+            <button
+            onClick={exportToExcel}
+            className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
+             >
+            Export Excel
+         </button>
+          <button
+            className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
+            onClick={() => navigate('/addAnnouncement')}
+          >
+            Add New Announcement
+          </button>
+          </div>
+        </div>
+
+        {/* ✅ Announcement Table */}
+        <div className="bg-white shadow rounded-lg overflow-hidden">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Title
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Content
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Date
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {announcements.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan="4"
+                    className="text-center py-6 text-gray-500 text-sm"
+                  >
+                    No announcements found.
+                  </td>
+                </tr>
+              ) : (
+                announcements.map((announcement) => (
+                  <tr key={announcement._id}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {announcement.title}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500">
+                      {announcement.content.substring(0, 50)}...
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {new Date(announcement.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button
+                        onClick={() =>
+                          navigate(`/editAnnouncements/${announcement._id}`)
+                        }
+                        className="text-indigo-600 hover:text-indigo-900 mr-4"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(announcement._id)}
+                        className="text-red-600 hover:text-red-900"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
 }
 
-export default AnnouncementPage;
+export default Dashboard;
