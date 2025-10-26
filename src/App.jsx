@@ -44,7 +44,8 @@ const AppContent = () => {
     "/payment-success", // Added payment success route
     "/announcementDashboard", // Added announcement route
     "/addAnnouncement", // Added add announcement route
-    "/editAnnouncements/:id" // Added edit announcement route
+    "/editAnnouncements/:id", // Added edit announcement route
+    "/announcements"
   ];
 
   return (

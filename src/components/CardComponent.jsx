@@ -20,16 +20,16 @@ function CardComponent({ id, title, description, price, image, status, category,
   };
   
   return (
-    <div className="w-full max-w-sm rounded-lg overflow-hidden shadow-md bg-white">
+    <div className="w-full max-w-sm h-[420px] flex flex-col justify-between rounded-lg overflow-hidden shadow-md bg-white">
       <img
         src={image}
         alt={title}
-        className="w-full h-50 object-cover"
+        className="w-full h-[180px] object-contain bg-white"
         onError={(e) => {
           e.target.src = '/default-image.jpg';
         }}
       />
-      <div className="p-4">
+      <div className="p-4 flex flex-col flex-grow justify-between">
         <h2 className="text-xl font-semibold text-gray-800">{title}</h2>
         <p className="text-gray-600 text-sm mt-1 line-clamp-2">{description}</p>
         <p className="text-gray-600 text-sm mt-1 line-clamp-2">{status}</p>

@@ -13,18 +13,26 @@ const PaymentGateway = () => {
       alert("No product details found!");
       return;
     }
+     console.log("🟢 State Details", state);
+    console.log("📧 Email:", state.email);
+    console.log("📱 Phone:", state.phone);
+if (!state.email || !state.phone) {
+      alert("Missing email or phone number. Please check your details.");
+      return;
+    }
+
 console.log("🟢 State Details", state);
     const orderData = {
     customerName: state.name,
     tShirtName: state.cartItems.map((item) => item.name).join(", "),
     address: "Colombo, Sri Lanka",
-    qty: state.qty,
+    qty: state.cartItems.reduce((total, item) => total + (item.qty || 1), 0),
     date: new Date().toISOString(),
-    status: "Pending",
+    status:"Pending",
     amount: state.totalAmount,
-    email: state.email || "abc@gmail.com",
+    email: state.email || "kavindutest0001@gmail.com",
     phone: state.phone || "0769622981",
-    paymentId: "TEMP123",
+
   };
 
     console.log("🟢 Sending order data:", orderData);
@@ -32,15 +40,16 @@ console.log("🟢 State Details", state);
     try {
       setLoading(true);
       // ✅ Normally you would send this to your backend:
-      const res = await axios.post("/api/order", orderData);
-
+      const res = await axios.post("http://localhost:5000/api/order", orderData);
+      const orderId = res?.data?.data?._id || "TEMP123";
+      console.log("🟢 Order created with ID:", orderId);
       // ✅ Simulate success
       setFormValue({
       ...state,
-      orderId: res.data.data._id, // MongoDB order ID
+      orderId,
       totalAmount: state.totalAmount,
       customerName: state.name,
-      email: state.email || "abc@gmail.com",
+      email: state.email || "kavindutest0001@gmail.com",
       phone: state.phone || "0769622981",
     });
       alert("Order created successfully!");
@@ -66,13 +75,16 @@ console.log("🟢 State Details", state);
 };
 
 function setFormValue(data) {
-  const merchant_id = "1232456";
-  const order_id = data.orderId || "TEMP123"; // ✅ Now dynamic
-  const amount = data.totalAmount;
-  const currency = "LKR";
-  const merchant_secret =
-    "MTI3ODg1Mjk4ODM3Mjc3MTYxODAyODc4NTY3MzkzMjU2MDk4NjU2OQ==";
+  console.log("🟢 Preparing payment form:", data);
 
+  const merchant_id = "1232456";
+  const merchant_secret = "ODU1OTkzODQyMjMwNDc0MjQ2NTIxOTcxNzIzNjcxNDY1OTE4MzE=";
+
+  const order_id = data.orderId || "TEMP123";
+  const amount = parseFloat(data.totalAmount).toFixed(2); 
+  const currency = "LKR";
+
+  // ✅ Hash generation (exactly as per PayHere docs)
   const hash = md5(
     merchant_id +
       order_id +
@@ -84,14 +96,14 @@ function setFormValue(data) {
     .toUpperCase();
 
   const form = document.createElement("form");
-  form.method = "post";
+  form.method = "POST";
   form.action = "https://sandbox.payhere.lk/pay/checkout";
 
   const fields = {
     merchant_id,
-    return_url: "http://localhost:5173/dashboard",
+    return_url: "http://localhost:5173/payment-success", //db status eka update wenna one
     cancel_url: "http://localhost:5173/dashboard",
-    notify_url: "http://localhost:5000/api/payment/notify",
+    notify_url: "http://localhost:5173/dashboard",
     order_id,
     items: "Online T-Shirt Order",
     currency,
@@ -100,7 +112,7 @@ function setFormValue(data) {
     last_name: "Customer",
     email: data.email,
     phone: data.phone,
-    address: data.address,
+    address: "Test Address",
     city: "Colombo",
     country: "Sri Lanka",
     hash,
@@ -117,5 +129,6 @@ function setFormValue(data) {
   document.body.appendChild(form);
   form.submit();
 }
+
 
 export default PaymentGateway;

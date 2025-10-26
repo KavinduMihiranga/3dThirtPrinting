@@ -56,7 +56,7 @@ const PaymentPage = () => {
         address: `${state?.billingAddress?.addressLine1}, ${state?.billingAddress?.city}`,
         qty: state?.cartItems?.reduce((sum, item) => sum + item.qty, 0),
         date: new Date().toLocaleDateString(),
-        status: "Paid",
+        status: "Completed",
       };
       
         await axios.post("http://localhost:5000/api/order", orderData);

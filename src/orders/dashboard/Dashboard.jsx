@@ -10,6 +10,13 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+  const [currentPage, setCurrentPage] = useState(1);
+  const [ordersPerPage, setOrdersPerPage] = useState(10); // You can adjust this number
+
+  const indexOfLastOrder = currentPage * ordersPerPage;
+  const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
+  const currentOrders = orders.slice(indexOfFirstOrder, indexOfLastOrder);
+
 
 // ✅ Export Order as Excel file
 const exportToExcel = () => {
@@ -106,6 +113,28 @@ const exportToExcel = () => {
         </button>
       </div>
 
+
+{/* Rows per page selector */}
+      <div className="mb-4 flex items-center justify-end space-x-2">
+        <label htmlFor="rowsPerPage" className="text-sm text-gray-600 font-medium">
+          Rows per page:
+        </label>
+        <select
+          id="rowsPerPage"
+          value={ordersPerPage}
+          onChange={(e) => {
+            setOrdersPerPage(Number(e.target.value));
+            setCurrentPage(1);
+          }}
+          className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+        >
+          <option value={10}>10</option>
+          <option value={20}>20</option>
+          <option value={50}>50</option>
+        </select>
+      </div>
+
+
       {/* Table */}
       <div className="overflow-x-auto">
         <table className="min-w-full bg-white border border-gray-200 rounded-lg">
@@ -127,8 +156,8 @@ const exportToExcel = () => {
                   Loading...
                 </td>
               </tr>
-            ) : orders.length > 0 ? (
-              orders.map((order, index) => (
+            ) : currentOrders.length > 0 ? (
+              currentOrders.map((order, index) => (
                 <tr key={index} className="border-b border-gray-200 hover:bg-gray-50">
                   <td className="py-3 px-6 text-left whitespace-nowrap">
                     {order.customerName}
@@ -167,6 +196,23 @@ const exportToExcel = () => {
           </tbody>
         </table>
       </div>
+
+      <div className="flex justify-center mt-6 space-x-2">
+      {Array.from({ length: Math.ceil(orders.length / ordersPerPage) }, (_, i) => (
+        <button
+          key={i}
+          onClick={() => setCurrentPage(i + 1)}
+          className={`px-3 py-1 rounded-md border ${
+            currentPage === i + 1
+              ? "bg-green-600 text-white"
+              : "bg-white text-gray-600"
+          }`}
+        >
+          {i + 1}
+        </button>
+      ))}
+    </div>
+
     </div>
   );
 }

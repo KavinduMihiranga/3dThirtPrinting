@@ -52,7 +52,7 @@ const handleSubmit = () => {
     customerName: formData.customerName,
     tShirtName: formData.tShirtName,
     address: formData.address,
-    qty: formData.qty,
+    qty: Number(formData.qty), // ✅ ensure it's a number
     date: formData.date, // Convert date to timestamp
     status: formData.status
   };
@@ -141,7 +141,7 @@ const handleSubmit = () => {
           <div className="flex-1">
             <label className="block text-sm font-medium">Qty</label>
             <input
-              type="text"
+              type="number"
               name="qty"
               value={formData.qty}
               onChange={handleChange}

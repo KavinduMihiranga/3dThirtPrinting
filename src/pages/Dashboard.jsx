@@ -33,7 +33,7 @@ function Dashboard(props) {
     <>
     {/* Optional: Keep your design card if needed */}
        
-      <div className="flex gap-4 flex-row justify-between items-center p-4 w-full flex-wrap">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 p-4">
         
          <DesignCard
           image={DesignImg}
