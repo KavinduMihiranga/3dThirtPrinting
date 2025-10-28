@@ -1,11 +1,13 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Scene from "../components/Scene";
 import * as THREE from "three";
 import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
 import { saveAs } from "file-saver"; 
 import axios from "axios";
 
-function Dashboard() {
+function DesignDashboard() { // ✅ Renamed to avoid conflicts
+  const navigate = useNavigate(); // ✅ Moved inside component
   const [tshirtColor, setTshirtColor] = useState("#3b82f6");
   const [designs, setDesigns] = useState([]);
   const [selectedDesignIndex, setSelectedDesignIndex] = useState(null);
@@ -23,7 +25,7 @@ function Dashboard() {
   const canvasRef = useRef();
 
   // Enhanced Download as GLB (3D model) with error handling
-   const handleDownloadGLB = () => {
+  const handleDownloadGLB = () => {
     if (!canvasRef.current?.tshirtGroup) return;
 
     const exporter = new GLTFExporter();
@@ -53,7 +55,7 @@ function Dashboard() {
     );
   };
 
-   // 👉 Export PNG (snapshot)
+  // Export PNG (snapshot)
   const handleDownloadPNG = () => {
     if (!canvasRef.current?.gl) return;
 
@@ -67,7 +69,7 @@ function Dashboard() {
   };
 
   // Image upload -> GPU texture
-   const handleImageUpload = useCallback((event) => {
+  const handleImageUpload = useCallback((event) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -88,10 +90,8 @@ function Dashboard() {
       loader.load(
         imageUrl,
         (texture) => {
-          // Ensure texture is fully loaded before adding to designs :cite[10]
           texture.needsUpdate = true;
           
-          // three r150+: colorSpace; older: encoding
           if ("colorSpace" in texture) texture.colorSpace = THREE.SRGBColorSpace;
           else texture.encoding = THREE.sRGBEncoding;
           texture.flipY = false;
@@ -109,7 +109,6 @@ function Dashboard() {
 
           setDesigns((prev) => {
             const next = [...prev, newDesign];
-            // Select the newly added design
             setSelectedDesignIndex(next.length - 1);
             return next;
           });
@@ -124,7 +123,6 @@ function Dashboard() {
     reader.onerror = () => alert("Error reading image file");
     reader.readAsDataURL(file);
 
-    // reset input so same file can re-trigger
     event.target.value = "";
   }, []);
 
@@ -154,7 +152,7 @@ function Dashboard() {
         const copy = [...prev];
         const removed = copy[index];
         if (removed?.type === "image" && removed.texture) {
-          removed.texture.dispose(); // free GPU memory
+          removed.texture.dispose();
         }
         copy.splice(index, 1);
         return copy;
@@ -174,7 +172,6 @@ function Dashboard() {
     setSelectedDesignIndex(index);
   }, []);
 
-  // Position/rotation/scale controls
   const handleDesignPositionChange = useCallback((index, axis, value) => {
     const n = parseFloat(value);
     setDesigns((prev) => {
@@ -238,49 +235,114 @@ function Dashboard() {
 
   // Save & Order function
   const handleSaveOrder = async () => {
-    if (!canvasRef.current?.tshirtGroup) return;
+    if (!canvasRef.current?.tshirtGroup) {
+      alert('No design to save');
+      return;
+    }
 
-    // Export T-shirt model as GLB blob
-    const exporter = new GLTFExporter();
-    exporter.parse(
-      canvasRef.current.tshirtGroup,
-      async (result) => {
-        const blob = new Blob([result], { type: "model/gltf-binary" });
+    try {
+      setExportStatus({ isExporting: true, message: "Exporting design..." });
+      
+      const exporter = new GLTFExporter();
+      
+      exporter.parse(
+        canvasRef.current.tshirtGroup,
+        async (gltfData) => {
+          try {
+            const blob = new Blob([gltfData], { type: "model/gltf-binary" });
+            console.log('GLB Blob size:', blob.size, 'bytes');
+            
+            // Take PNG snapshot for preview
+            let pngDataURL = null;
+            if (canvasRef.current?.gl?.domElement) {
+              pngDataURL = canvasRef.current.gl.domElement.toDataURL("image/png");
+            }
 
-        // convert blob to Base64 (or upload to server as FormData)
-        const reader = new FileReader();
-        reader.onloadend = async () => {
-          const glbBase64 = reader.result;
-
-          const orderData = {
-            // tshirtColor,
-            // designs,
-            // model: glbBase64, // or upload separately
-            // customer: {
-            //   name: "John Doe", // in real app from login / form
-            //   email: "john@example.com",
-            // },
-              customerName: "John Doe1",           // you can replace with form input
-              tShirtName: "Custom T-shirt1",
-              address: "123 Street, City1",
-              qty: totalItems,
-              date: new Date(),
-              status: "Processing",
-              designFile: "",   
+          // Store design data in localStorage temporarily
+            const designData = {
+              blob: await blob.arrayBuffer(), // Convert to ArrayBuffer for storage
+              preview: pngDataURL,
+              timestamp: Date.now()
           };
 
-          try {
-            const res = await axios.post("http://localhost:5000/api/order", orderData);
-            alert(`Order placed successfully! ID: ${response.data.data._id}`);
+           // Convert ArrayBuffer to base64 for localStorage
+          const base64 = btoa(
+            new Uint8Array(designData.blob)
+              .reduce((data, byte) => data + String.fromCharCode(byte), '')
+          );
+          
+          localStorage.setItem('pendingDesign', JSON.stringify({
+            file: base64,
+            preview: pngDataURL,
+            timestamp: Date.now()
+          }));
+
+            // Create FormData
+            const formData = new FormData();
+            formData.append('customerName', 'John Doe');
+            formData.append('email', 'john@example.com');
+            formData.append('description', 'Custom T-shirt design using 3D editor');
+            formData.append('designPreview', pngDataURL || '');
+            formData.append('designFile', blob, 'tshirt-design.glb');
+
+            // Log FormData contents
+            for (let pair of formData.entries()) {
+              if (pair[1] instanceof Blob) {
+                console.log(pair[0], '- Blob size:', pair[1].size);
+              } else {
+                console.log(pair[0], ':', pair[1].substring(0, 50) + '...');
+              }
+            }
+
+            setExportStatus({ isExporting: true, message: "Uploading design..." });
+
+            const res = await axios.post(
+              "http://localhost:5000/api/design-inquiry", 
+              formData,
+              {
+                headers: { 
+                  'Content-Type': 'multipart/form-data' 
+                },
+                timeout: 30000
+              }
+            );
+            
+            setExportStatus({ isExporting: false, message: "Design saved successfully! Redirecting to checkout..." });
+            
+            // Redirect to checkout page
+            setTimeout(() => {
+              navigate('/checkoutPage');
+            }, 1500);
+
+            console.log('Response:', res.data);
+            alert('Design inquiry sent successfully!');
+
+            setTimeout(() => {
+              setExportStatus({ isExporting: false, message: "" });
+            }, 3000);
+
           } catch (err) {
-            console.error("Error placing order", err);
-            alert("Failed to place order");
+            console.error("Error sending design inquiry:", err);
+            setExportStatus({ isExporting: false, message: "" });
+            alert("Failed to send design inquiry: " + (err.response?.data?.message || err.message));
           }
-        };
-        reader.readAsDataURL(blob);
-      },
-      { binary: true }
-    );
+        },
+        (error) => {
+          console.error('GLTFExporter error:', error);
+          setExportStatus({ isExporting: false, message: "" });
+          alert('Failed to export 3D model');
+        },
+        { 
+          binary: true,
+          embedImages: true,
+          truncateDrawRange: true
+        }
+      );
+    } catch (error) {
+      console.error('Export error:', error);
+      setExportStatus({ isExporting: false, message: "" });
+      alert('Failed to export design');
+    }
   };
 
   return (
@@ -294,7 +356,7 @@ function Dashboard() {
         </div>
       )}
       
-       <div className="max-w-7xl mx-auto bg-white p-4 md:p-6 rounded-xl shadow-md grid grid-cols-1 lg:grid-cols-5 gap-4 md:gap-6">
+      <div className="max-w-7xl mx-auto bg-white p-4 md:p-6 rounded-xl shadow-md grid grid-cols-1 lg:grid-cols-5 gap-4 md:gap-6">
         {/* Left Panel */}
         <div className="col-span-1 space-y-3">
           <div className="space-y-2">
@@ -328,8 +390,6 @@ function Dashboard() {
               />
               Add Image
             </label>
-
-           
 
             {designs.length > 0 && (
               <button
@@ -404,7 +464,7 @@ function Dashboard() {
                 </div>
               </div>
 
-              {/* Rotation Controls (radians) */}
+              {/* Rotation Controls */}
               <div className="mb-3">
                 <div className="text-xs font-medium mb-1">
                   Rotation (radians, e.g. 3.1416 = 180°)
@@ -534,9 +594,14 @@ function Dashboard() {
           )}
         </div>
 
-        {/* Right Panel (order + sizes) */}
+        {/* Right Panel */}
         <div className="col-span-1 space-y-4">
-          <button onClick={handleSaveOrder}>Save & Order</button>
+          <button 
+            onClick={handleSaveOrder}
+            className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg transition"
+          >
+            Save & Order
+          </button>
 
           <div className="bg-gray-100 rounded-lg p-3 md:p-4 text-center">
             <div className="text-sm font-medium mb-2">Selected Color</div>
@@ -572,15 +637,28 @@ function Dashboard() {
         </div>
       </div>
 
-        {/* Export Options */}
-            <div>
-      
-      <div className="mt-4 flex gap-2">
-        <button onClick={handleDownloadGLB}>Download GLB</button>
-        <button onClick={handleDownloadGLTF}>Download GLTF</button>
-        {/* <button onClick={handleDownloadPNG}>Download PNG</button> */}
+      {/* Export Options */}
+      <div className="max-w-7xl mx-auto mt-4 flex gap-2 justify-center">
+        <button 
+          onClick={handleDownloadGLB}
+          className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition"
+        >
+          Download GLB
+        </button>
+        <button 
+          onClick={handleDownloadGLTF}
+          className="bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 px-4 rounded-lg transition"
+        >
+          Download GLTF
+        </button>
+        <button 
+          onClick={handleDownloadPNG}
+          className="bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg transition"
+        >
+          Download PNG
+        </button>
       </div>
-    </div>
+
       {/* Price Summary */}
       <div className="max-w-7xl mx-auto mt-4 md:mt-6 p-4 md:p-6 bg-white rounded-lg shadow flex justify-between items-center">
         <div>
@@ -596,4 +674,4 @@ function Dashboard() {
   );
 }
 
-export default Dashboard;
+export default DesignDashboard; // ✅ Export the renamed component

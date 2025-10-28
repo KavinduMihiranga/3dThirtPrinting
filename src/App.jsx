@@ -17,14 +17,17 @@ import OrderDashboard from "./home/dashboard/OrderDashboard.jsx";
 import ProductDashboard from "./home/dashboard/ProductDashboard.jsx";
 import AddProduct from "./product/components/AddProduct.jsx";
 import AboutUs from "./pages/AboutUs.jsx";
-import Design from "./DesignPage/dashboard/dashboard.jsx";
+import Design from "./DesignPage/dashboard/DesignDashboard.jsx";
 import ProductDetail from "./product/components/ProductDetail.jsx";
 import AdminHomePage from "./home/dashboard/AdminHomePage.jsx";
-import PaymentGateway from "./paymentGateway/PaymentGateway.jsx"; // Added payment gateway
-import PaymentSuccess from "./paymentGateway/PaymentSuccess.jsx"; // Added payment success page
+import PaymentGateway from "./paymentGateway/PaymentGateway.jsx";
+import PaymentSuccess from "./paymentGateway/PaymentSuccess.jsx";
 import AnnouncementDashboard from "./announcement/dashboard/Dashboard.jsx"
 import AddAnnouncement from "./announcement/components/AddAnnouncement.jsx";
 import EditAnnouncement from "./announcement/components/EditAnnouncement.jsx";
+import DesignInquiryDashboard from "./designOrder/dashboard/Dashboard.jsx";
+import DesignOrderDetails from "./designOrder/components/DesignOrderDetails.jsx";
+import ProtectedRoute from './components/ProtectedRoute';
 
 const AppContent = () => {
   const location = useLocation();
@@ -40,12 +43,14 @@ const AppContent = () => {
     "/addProduct", 
     "/addCustomer", 
     "/addOrder",
-    "/payment", // Added payment route
-    "/payment-success", // Added payment success route
-    "/announcementDashboard", // Added announcement route
-    "/addAnnouncement", // Added add announcement route
-    "/editAnnouncements/:id", // Added edit announcement route
-    "/announcements"
+    "/payment",
+    "/payment-success",
+    "/announcementDashboard",
+    "/addAnnouncement",
+    "/editAnnouncements/:id",
+    "/announcements",
+    "/design-inquiry",
+    "/designOrderDetails/:id"
   ];
 
   return (
@@ -72,31 +77,161 @@ const AppContent = () => {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/Reset-password" element={<ResetPassword />} />
 
-        {/* Admin Routes */}
-        <Route path="/adminDashboard" element={<AdminDashboard />} />
-        <Route path="/adminHomePage" element={<AdminHomePage />} />
-        <Route path="/addAdmin" element={<AddAdmin />} />
-        <Route path="/addAdmin/:id" element={<AddAdmin />} />
+        {/* Protected Admin Routes */}
+        <Route 
+          path="/adminDashboard" 
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/adminHomePage" 
+          element={
+            <ProtectedRoute>
+              <AdminHomePage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/addAdmin" 
+          element={
+            <ProtectedRoute>
+              <AddAdmin />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/addAdmin/:id" 
+          element={
+            <ProtectedRoute>
+              <AddAdmin />
+            </ProtectedRoute>
+          } 
+        />
 
-        {/* Customer Routes */}
-        <Route path="/customerDashboard" element={<CustomerDashboard />} />
-        <Route path="/addCustomer" element={<AddCustomer />} />
-        <Route path="/addCustomer/:id" element={<AddCustomer />} />
+        {/* Protected Customer Routes */}
+        <Route 
+          path="/customerDashboard" 
+          element={
+            <ProtectedRoute>
+              <CustomerDashboard />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/addCustomer" 
+          element={
+            <ProtectedRoute>
+              <AddCustomer />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/addCustomer/:id" 
+          element={
+            <ProtectedRoute>
+              <AddCustomer />
+            </ProtectedRoute>
+          } 
+        />
 
-        {/* Product Routes */}
-        <Route path="/productDashboard" element={<ProductDashboard />} />
-        <Route path="/addProduct" element={<AddProduct />} />
-        <Route path="/addProduct/:id" element={<AddProduct />} />
+        {/* Protected Product Routes */}
+        <Route 
+          path="/productDashboard" 
+          element={
+            <ProtectedRoute>
+              <ProductDashboard />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/addProduct" 
+          element={
+            <ProtectedRoute>
+              <AddProduct />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/addProduct/:id" 
+          element={
+            <ProtectedRoute>
+              <AddProduct />
+            </ProtectedRoute>
+          } 
+        />
 
-        {/* Order Routes */}
-        <Route path="/orderDashboard" element={<OrderDashboard />} />
-        <Route path="/addOrder" element={<AddOrder />} />
-        <Route path="/addOrder/:id" element={<AddOrder />} />
+        {/* Protected Order Routes */}
+        <Route 
+          path="/orderDashboard" 
+          element={
+            <ProtectedRoute>
+              <OrderDashboard />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/addOrder" 
+          element={
+            <ProtectedRoute>
+              <AddOrder />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/addOrder/:id" 
+          element={
+            <ProtectedRoute>
+              <AddOrder />
+            </ProtectedRoute>
+          } 
+        />
         
-        {/* Announcement Route */}
-        <Route path="/announcements" element={<AnnouncementDashboard />} />
-        <Route path="/addAnnouncement" element={<AddAnnouncement />} />
-        <Route path="/editAnnouncements/:id" element={<EditAnnouncement />} />
+        {/* Protected Announcement Routes */}
+        <Route 
+          path="/announcements" 
+          element={
+            <ProtectedRoute>
+              <AnnouncementDashboard />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/addAnnouncement" 
+          element={
+            <ProtectedRoute>
+              <AddAnnouncement />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/editAnnouncements/:id" 
+          element={
+            <ProtectedRoute>
+              <EditAnnouncement />
+            </ProtectedRoute>
+          } 
+        />
+
+        {/* Protected Design Inquiry Routes */}
+        <Route 
+          path="/design-inquiry" 
+          element={
+            <ProtectedRoute>
+              <DesignInquiryDashboard />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/designOrderDetails/:id" 
+          element={
+            <ProtectedRoute>
+              <DesignOrderDetails />
+            </ProtectedRoute>
+          } 
+        />
       </Routes>
     </>
   );

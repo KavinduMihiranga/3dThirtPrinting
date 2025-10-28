@@ -10,6 +10,8 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [productPerPage, setProductsPerPage] = useState(10); // You can adjust this number
 
   // ✅ Export announcements as Excel file
   const exportToExcel = () => {
@@ -189,6 +191,21 @@ function Dashboard() {
           </tbody>
         </table>
       </div>
+       <div className="flex justify-center mt-6 space-x-2">
+      {Array.from({ length: Math.ceil(products.length / productPerPage) }, (_, i) => (
+        <button
+          key={i}
+          onClick={() => setCurrentPage(i + 1)}
+          className={`px-3 py-1 rounded-md border ${
+            currentPage === i + 1
+              ? "bg-green-600 text-white"
+              : "bg-white text-gray-600"
+          }`}
+        >
+          {i + 1}
+        </button>
+      ))}
+    </div>
     </div>
   );
 }

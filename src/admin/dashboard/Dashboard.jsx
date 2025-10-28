@@ -11,49 +11,99 @@ function Dashboard() {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const navigate = useNavigate();
+    const [currentPage, setCurrentPage] = useState(1);
+    const [adminPerPage, setAdminsPerPage] = useState(10);
 
+    // Get the auth token from localStorage
+    const getAuthToken = () => {
+        return localStorage.getItem('adminToken');
+    };
 
-  // ✅ Export admin as Excel file
-const exportToExcel = () => {
-  if (!admin || admin.length === 0) {
-    alert("No data available to export!");
-    return;
-  }
+    // Configure axios to include the token in requests
+    const api = axios.create({
+        baseURL: 'http://localhost:5000/api',
+    });
 
-  // Convert announcement objects into sheet data
-  const dataToExport = admin.map((a, index) => ({
-    "No": index + 1,
-    "Name": a.name,
-    "Email": a.email,
-    "Phone": a.phone,
-    "NIC": a.nic,
-    "Status": a.status,
-    "Created Date": new Date(a.createdAt).toLocaleDateString(),
-  }));
+    // Add request interceptor to include token
+    api.interceptors.request.use(
+        (config) => {
+            const token = getAuthToken();
+            if (token) {
+                config.headers.Authorization = `Bearer ${token}`;
+            }
+            return config;
+        },
+        (error) => {
+            return Promise.reject(error);
+        }
+    );
 
-  // Create worksheet and workbook
-  const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Admins");
+    // Add response interceptor to handle token errors
+    api.interceptors.response.use(
+        (response) => response,
+        (error) => {
+            if (error.response?.status === 401) {
+                // Token is invalid or expired
+                localStorage.removeItem('adminToken');
+                localStorage.removeItem('adminUser');
+                navigate('/login');
+            }
+            return Promise.reject(error);
+        }
+    );
 
-  // Convert workbook to binary and trigger download
-  const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-  const data = new Blob([excelBuffer], { type: "application/octet-stream" });
-  saveAs(data, "Admins_Report.xlsx");
-};
+    // ✅ Export admin as Excel file
+    const exportToExcel = () => {
+        if (!admin || admin.length === 0) {
+            alert("No data available to export!");
+            return;
+        }
 
+        const dataToExport = admin.map((a, index) => ({
+            "No": index + 1,
+            "Username": a.username || 'N/A',
+            "Email": a.email || 'N/A',
+            "Phone": a.phone || 'N/A',
+            "NIC": a.nic || 'N/A',
+            "Role": a.role || 'N/A',
+            "Status": a.status || 'Active',
+            "Created Date": a.createdAt ? new Date(a.createdAt).toLocaleDateString() : 'N/A',
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Admins");
+
+        const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+        const data = new Blob([excelBuffer], { type: "application/octet-stream" });
+        saveAs(data, "Admins_Report.xlsx");
+    };
 
     useEffect(() => {
+        // Check if user is authenticated
+        const token = getAuthToken();
+        if (!token) {
+            navigate('/login');
+            return;
+        }
         getAdmins();  
-    }, []);
+    }, [navigate]);
 
     const getAdmins = async () => {
         try {
-            const res = await axios.get("http://localhost:5000/api/admin");
+            console.log('🔐 Fetching admins with token...');
+            const res = await api.get("/admin");
+            console.log('✅ Admins data received:', res.data);
             setAdmin(res.data.data || []);
             setLoading(false);
         } catch(error) {
-            console.error("Error fetching Admin:", error);
+            console.error("❌ Error fetching Admin:", error);
+            console.error("❌ Error response:", error.response?.data);
+            
+            if (error.response?.status === 401) {
+                alert("Session expired. Please login again.");
+                navigate('/login');
+            }
             setLoading(false);
         }
     };
@@ -63,18 +113,42 @@ const exportToExcel = () => {
         if (!confirmDelete) return;
 
         try {
-            await axios.delete(`http://localhost:5000/api/admin/${id}`);
+            await api.delete(`/admin/${id}`);
             alert("Admin deleted successfully!");
             getAdmins();
         } catch (error) {
             console.error("Delete Error:", error);
-            alert("Failed to delete admin.");
+            if (error.response?.status === 401) {
+                alert("Session expired. Please login again.");
+                navigate('/login');
+            } else {
+                alert("Failed to delete admin.");
+            }
         }
     };
 
-    const filteredAdmins = admin.filter(admin => 
-        admin.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    // FIXED: Safe search filter
+    const filteredAdmins = admin.filter(admin => {
+        if (!admin) return false;
+        
+        const searchableFields = [
+            admin.username || '',
+            admin.email || '',
+            admin.name || '',
+            admin.phone || '',
+            admin.nic || '',
+            admin.role || ''
+        ];
+        
+        return searchableFields.some(field => 
+            field.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    });
+
+    // Pagination logic
+    const indexOfLastAdmin = currentPage * adminPerPage;
+    const indexOfFirstAdmin = indexOfLastAdmin - adminPerPage;
+    const currentAdmins = filteredAdmins.slice(indexOfFirstAdmin, indexOfLastAdmin);
 
     return (
         <div className="flex min-h-screen">
@@ -94,24 +168,24 @@ const exportToExcel = () => {
                     </h1>
                     <div className="flex space-x-3">
                         <button
-                        onClick={exportToExcel}
-                        className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
+                            onClick={exportToExcel}
+                            className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
                         >
-                        Export Excel
-                    </button>
-                    <button 
-                        className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
-                        onClick={() => navigate("/addAdmin")}
-                    >
-                        Add New Admin
-                    </button>
-                </div>
+                            Export Excel
+                        </button>
+                        <button 
+                            className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
+                            onClick={() => navigate("/addAdmin")}
+                        >
+                            Add New Admin
+                        </button>
+                    </div>
                 </div>
 
                 <div className="mb-6 flex items-center space-x-4">
                     <input
                         type="text"
-                        placeholder="Search Admin..."
+                        placeholder="Search by username, email, phone..."
                         className="flex-grow p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -122,10 +196,11 @@ const exportToExcel = () => {
                     <table className="min-w-full bg-white border border-gray-200 rounded-lg">
                         <thead>
                             <tr className="bg-gray-100 border-b border-gray-200 text-gray-600 uppercase text-sm leading-normal">
-                                <th className="py-3 px-6 text-left">Name</th>
+                                <th className="py-3 px-6 text-left">Username</th>
                                 <th className="py-3 px-6 text-left">Email</th>
                                 <th className="py-3 px-6 text-left">Phone</th>
                                 <th className="py-3 px-6 text-left">NIC</th>
+                                <th className="py-3 px-6 text-left">Role</th>
                                 <th className="py-3 px-6 text-left">Status</th>
                                 <th className="py-3 px-6 text-center">Actions</th>
                             </tr>
@@ -133,29 +208,38 @@ const exportToExcel = () => {
                         <tbody className="text-gray-700 text-sm font-light">
                             {loading ? (
                                 <tr>
-                                    <td colSpan="6" className="text-center py-4">Loading Admins...</td>
+                                    <td colSpan="7" className="text-center py-4">Loading Admins...</td>
                                 </tr>
-                            ) : filteredAdmins.length > 0 ? (
-                                filteredAdmins.map((admin) => (
+                            ) : currentAdmins.length > 0 ? (
+                                currentAdmins.map((admin) => (
                                     <tr key={admin._id} className="border-b border-gray-200 hover:bg-gray-50">
                                         <td className="py-3 px-6 text-left">
                                             <button 
                                                 className="text-blue-500 hover:underline"
                                                 onClick={() => navigate(`/admin/${admin._id}`)}
                                             >
-                                                {admin.name}
+                                                {admin.username || 'N/A'}
                                             </button>
                                         </td>
-                                        <td className="py-3 px-6 text-left">{admin.email}</td>
-                                        <td className="py-3 px-6 text-left">{admin.phone}</td>
-                                        <td className="py-3 px-6 text-left">{admin.nic}</td>
+                                        <td className="py-3 px-6 text-left">{admin.email || 'N/A'}</td>
+                                        <td className="py-3 px-6 text-left">{admin.phone || 'N/A'}</td>
+                                        <td className="py-3 px-6 text-left">{admin.nic || 'N/A'}</td>
                                         <td className="py-3 px-6 text-left">
                                             <span className={`px-2 py-1 rounded-full text-xs ${
-                                                admin.status === 'Active' 
+                                                admin.role === 'superadmin' 
+                                                    ? 'bg-purple-100 text-purple-800' 
+                                                    : 'bg-blue-100 text-blue-800'
+                                            }`}>
+                                                {admin.role || 'admin'}
+                                            </span>
+                                        </td>
+                                        <td className="py-3 px-6 text-left">
+                                            <span className={`px-2 py-1 rounded-full text-xs ${
+                                                (admin.status === 'Active' || !admin.status) 
                                                     ? 'bg-green-100 text-green-800' 
                                                     : 'bg-red-100 text-red-800'
                                             }`}>
-                                                {admin.status}
+                                                {admin.status || 'Active'}
                                             </span>
                                         </td>
                                         <td className="py-3 px-6 text-center space-x-2">
@@ -176,7 +260,7 @@ const exportToExcel = () => {
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan="6" className="text-center py-4 text-gray-400">
+                                    <td colSpan="7" className="text-center py-4 text-gray-400">
                                         {searchTerm ? "No matching admin found" : "No Admins available"}
                                     </td>
                                 </tr>
@@ -186,17 +270,20 @@ const exportToExcel = () => {
                 </div>
 
                 {/* Pagination */}
-                <div className="flex justify-end items-center mt-6 text-gray-600">
-                    <button
-                        className="p-2 rounded-lg hover:bg-gray-200 disabled:opacity-50"
-                        disabled
-                    >
-                        &lt;
-                    </button>
-                    <span className="mx-2">1 / 10</span>
-                    <button className="p-2 rounded-lg hover:bg-gray-200">
-                        &gt;
-                    </button>
+                <div className="flex justify-center mt-6 space-x-2">
+                    {Array.from({ length: Math.ceil(filteredAdmins.length / adminPerPage) }, (_, i) => (
+                        <button
+                            key={i}
+                            onClick={() => setCurrentPage(i + 1)}
+                            className={`px-3 py-1 rounded-md border ${
+                                currentPage === i + 1
+                                    ? "bg-green-600 text-white"
+                                    : "bg-white text-gray-600"
+                            }`}
+                        >
+                            {i + 1}
+                        </button>
+                    ))}
                 </div>
             </div>
         </div>

@@ -1,6 +1,6 @@
 import React from 'react'
 import logo from "../../assets/TshirtPrintingImg.jpg"
-import {User,NotebookText,Shirt, Megaphone  } from 'lucide-react';
+import {User,NotebookText,Shirt, Megaphone, Palette, Users  } from 'lucide-react';
 import { Navigate, useNavigate } from 'react-router-dom';
 
 
@@ -45,7 +45,12 @@ export default function Sidebar({activation}) {
 
     const handleAnnouncementButtonClick = () => {
         console.log("Announcement button clicked");
-        navigate("/announcements");
+        navigate("/productDashboard");
+    }
+
+    const handleDesignOrderButtonClick = () => {
+        console.log("Design order button clicked");
+        navigate("/design-inquiry");
     }
 
 
@@ -62,10 +67,11 @@ export default function Sidebar({activation}) {
 
       <nav className='space-y-4 mb-6'>
       <NavItem icon={<User size={18}/>} text="Admin" active={activation} onclick={handleAdminButtonClick}/>
-      <NavItem icon={<User size={18}/>} text="Customer" active={activation} onclick={handleCustomerButtonClick}/>
+      <NavItem icon={<Users size={18}/>} text="Customer" active={activation} onclick={handleCustomerButtonClick}/>
       <NavItem icon={<NotebookText  size={18}/>} text="Order" active={activation} onclick={handleOrderButtonClick}/>
       <NavItem icon={<Shirt size={18}/>} text="Product" active={activation} onclick={handleProductButtonClick}/>
       <NavItem icon={<Megaphone  size={18}/>} text="Announcement" active={activation} onclick={handleAnnouncementButtonClick}/>
+      <NavItem icon={<Palette  size={18}/>} text="DesignOrder" active={activation} onclick={handleDesignOrderButtonClick}/>
       </nav>
     </div>
   )

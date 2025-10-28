@@ -11,6 +11,8 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [customerPerPage, setCustomersPerPage] = useState(10); // You can adjust this number
 
 // ✅ Export customer as Excel file
 const exportToExcel = () => {
@@ -178,16 +180,22 @@ const exportToExcel = () => {
         </div>
 
         {/* Pagination */}
-        <div className="flex justify-end items-center mt-6 text-gray-600">
-          <button
-            className="p-2 rounded-lg hover:bg-gray-200 disabled:opacity-50"
-            disabled
-          >
-            &lt;
-          </button>
-          <span className="mx-2">1 / 10</span>
-          <button className="p-2 rounded-lg hover:bg-gray-200">&gt;</button>
-        </div>
+       
+      <div className="flex justify-center mt-6 space-x-2">
+      {Array.from({ length: Math.ceil(customer.length / customerPerPage) }, (_, i) => (
+        <button
+          key={i}
+          onClick={() => setCurrentPage(i + 1)}
+          className={`px-3 py-1 rounded-md border ${
+            currentPage === i + 1
+              ? "bg-green-600 text-white"
+              : "bg-white text-gray-600"
+          }`}
+        >
+          {i + 1}
+        </button>
+      ))}
+    </div>
       </div>
     </div>
   );
