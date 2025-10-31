@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Sidebar from '../../home/components/Sidebar.jsx';
-import { ArrowLeft } from 'lucide-react'; // ✅ for the icon (if you use lucide-react)
+import { ArrowLeft } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 
@@ -12,32 +12,28 @@ function Dashboard() {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-
   // ✅ Export announcements as Excel file
-const exportToExcel = () => {
-  if (!announcements || announcements.length === 0) {
-    alert("No data available to export!");
-    return;
-  }
+  const exportToExcel = () => {
+    if (!announcements || announcements.length === 0) {
+      alert("No data available to export!");
+      return;
+    }
 
-  // Convert announcement objects into sheet data
-  const dataToExport = announcements.map((a, index) => ({
-    "No": index + 1,
-    "Title": a.title,
-    "Content": a.content,
-    "Created Date": new Date(a.createdAt).toLocaleDateString(),
-  }));
+    const dataToExport = announcements.map((a, index) => ({
+      "No": index + 1,
+      "Title": a.title,
+      "Content": a.content,
+      "Created Date": new Date(a.createdAt).toLocaleDateString(),
+    }));
 
-  // Create worksheet and workbook
-  const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Announcements");
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Announcements");
 
-  // Convert workbook to binary and trigger download
-  const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-  const data = new Blob([excelBuffer], { type: "application/octet-stream" });
-  saveAs(data, "Announcements_Report.xlsx");
-};
+    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+    const data = new Blob([excelBuffer], { type: "application/octet-stream" });
+    saveAs(data, "Announcements_Report.xlsx");
+  };
 
   // ✅ Fetch announcements from backend
   useEffect(() => {
@@ -80,27 +76,30 @@ const exportToExcel = () => {
               size={24}
               className="mr-3 text-gray-500 cursor-pointer"
               onClick={() => navigate(-1)}
+              data-testid="back-button"
             />
             Announcement Management
           </h1>
           <div className="flex space-x-3">
             <button
-            onClick={exportToExcel}
-            className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
-             >
-            Export Excel
-         </button>
-          <button
-            className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
-            onClick={() => navigate('/addAnnouncement')}
-          >
-            Add New Announcement
-          </button>
+              onClick={exportToExcel}
+              className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
+              data-testid="export-excel-button"
+            >
+              Export Excel
+            </button>
+            <button
+              className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out"
+              onClick={() => navigate('/addAnnouncement')}
+              data-testid="add-announcement-button"
+            >
+              Add New Announcement
+            </button>
           </div>
         </div>
 
         {/* ✅ Announcement Table */}
-        <div className="bg-white shadow rounded-lg overflow-hidden">
+        <div className="bg-white shadow rounded-lg overflow-hidden" data-testid="announcements-table">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
@@ -118,9 +117,9 @@ const exportToExcel = () => {
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white divide-y divide-gray-200" data-testid="announcements-tbody">
               {announcements.length === 0 ? (
-                <tr>
+                <tr data-testid="no-announcements-row">
                   <td
                     colSpan="4"
                     className="text-center py-6 text-gray-500 text-sm"
@@ -129,8 +128,8 @@ const exportToExcel = () => {
                   </td>
                 </tr>
               ) : (
-                announcements.map((announcement) => (
-                  <tr key={announcement._id}>
+                announcements.map((announcement, index) => (
+                  <tr key={announcement._id} data-testid={`announcement-row-${index}`}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {announcement.title}
                     </td>
@@ -142,16 +141,16 @@ const exportToExcel = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <button
-                        onClick={() =>
-                          navigate(`/editAnnouncements/${announcement._id}`)
-                        }
+                        onClick={() => navigate(`/editAnnouncements/${announcement._id}`)}
                         className="text-indigo-600 hover:text-indigo-900 mr-4"
+                        data-testid={`edit-button-${index}`}
                       >
                         Edit
                       </button>
                       <button
                         onClick={() => handleDelete(announcement._id)}
                         className="text-red-600 hover:text-red-900"
+                        data-testid={`delete-button-${index}`}
                       >
                         Delete
                       </button>

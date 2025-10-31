@@ -28,6 +28,10 @@ import EditAnnouncement from "./announcement/components/EditAnnouncement.jsx";
 import DesignInquiryDashboard from "./designOrder/dashboard/Dashboard.jsx";
 import DesignOrderDetails from "./designOrder/components/DesignOrderDetails.jsx";
 import ProtectedRoute from './components/ProtectedRoute';
+import CustomerAuthRoute from "./login/CustomerLogin.jsx";
+import CustomerRegister from "./register/CustomerRegister.jsx";
+import ContactUsManagement from "./contactUs/dashboard/ContactUsManagement.jsx";
+import ContactUsDetails from "./contactUs/components/ContactDetails.jsx";
 
 const AppContent = () => {
   const location = useLocation();
@@ -50,7 +54,9 @@ const AppContent = () => {
     "/editAnnouncements/:id",
     "/announcements",
     "/design-inquiry",
-    "/designOrderDetails/:id"
+    "/designOrderDetails/:id",
+    "/contactUsManagement",
+    "/contactUsDetails/:id"
   ];
 
   return (
@@ -229,6 +235,40 @@ const AppContent = () => {
           element={
             <ProtectedRoute>
               <DesignOrderDetails />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+        path="/customer-auth"
+        element={
+          <ProtectedRoute>
+            <CustomerAuthRoute />
+          </ProtectedRoute>
+        }
+        />
+        <Route 
+        path="/customer-register"
+        element={
+          <ProtectedRoute>
+            <CustomerRegister />
+          </ProtectedRoute>
+        }
+        />
+
+        {/* Protected Contact Us Routes */}
+        <Route 
+          path="/contactUsManagement" 
+          element={
+            <ProtectedRoute>
+              <ContactUsManagement />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/contactUsDetails/:id" 
+          element={
+            <ProtectedRoute>
+              <ContactUsDetails />
             </ProtectedRoute>
           } 
         />

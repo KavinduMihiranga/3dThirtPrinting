@@ -1,6 +1,6 @@
 import React from 'react'
 import logo from "../../assets/TshirtPrintingImg.jpg"
-import {User,NotebookText,Shirt, Megaphone, Palette, Users  } from 'lucide-react';
+import {User,NotebookText,Shirt, Megaphone, Palette, Users, Contact  } from 'lucide-react';
 import { Navigate, useNavigate } from 'react-router-dom';
 
 
@@ -45,12 +45,17 @@ export default function Sidebar({activation}) {
 
     const handleAnnouncementButtonClick = () => {
         console.log("Announcement button clicked");
-        navigate("/productDashboard");
+        navigate("/announcements");
     }
 
     const handleDesignOrderButtonClick = () => {
         console.log("Design order button clicked");
         navigate("/design-inquiry");
+    }
+
+    const handleContactUsButtonClick = () => {
+        console.log("Contact Us button clicked");
+        navigate("/contactUsManagement");
     }
 
 
@@ -72,6 +77,7 @@ export default function Sidebar({activation}) {
       <NavItem icon={<Shirt size={18}/>} text="Product" active={activation} onclick={handleProductButtonClick}/>
       <NavItem icon={<Megaphone  size={18}/>} text="Announcement" active={activation} onclick={handleAnnouncementButtonClick}/>
       <NavItem icon={<Palette  size={18}/>} text="DesignOrder" active={activation} onclick={handleDesignOrderButtonClick}/>
+      <NavItem icon={<Contact  size={18}/>} text="Contact Us" active={activation} onclick={handleContactUsButtonClick}/>
       </nav>
     </div>
   )
