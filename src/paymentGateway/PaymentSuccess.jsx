@@ -15,7 +15,7 @@ const PaymentSuccess = () => {
         });
         console.log("✅ Payment confirmed:", res.data);
         alert("Payment successful!");
-        // navigate("/dashboard");
+        navigate("/");
       } catch (err) {
         console.error("❌ Payment confirmation failed:", err);
         alert("Payment confirmation failed.");

@@ -62,10 +62,12 @@ function Dashboard() {
       No: index + 1,
       "Customer Name": inq.customerName,
       Email: inq.email,
-      Phone: inq.phone,
+      Phone: inq.phone || "N/A",
       Description: inq.description,
+      "Total Items": inq.totalItems || 0,
+      "Total Price": inq.totalPrice ? `Rs ${inq.totalPrice}` : "N/A",
       Status: inq.status,
-      Price: inq.price || "N/A",
+      Price: inq.price ? `Rs ${inq.price}` : "N/A",
       "Created Date": new Date(inq.createdAt).toLocaleString(),
     }));
 
@@ -87,9 +89,24 @@ function Dashboard() {
       minute: "2-digit",
     });
 
+  // Parse design data to get total items
+  const getTotalItems = (inquiry) => {
+    if (inquiry.totalItems) return inquiry.totalItems;
+    if (inquiry.designData && inquiry.designData.totalItems) return inquiry.designData.totalItems;
+    return 0;
+  };
+
+  // Parse design data to get sizes
+  const getSizesSummary = (inquiry) => {
+    if (inquiry.sizes) return inquiry.sizes;
+    if (inquiry.designData && inquiry.designData.sizes) return inquiry.designData.sizes;
+    return {};
+  };
+
   const filteredInquiries = [...inquiries]
     .filter((inq) =>
-      [inq.customerName, inq.email, inq.description]
+      [inq.customerName, inq.email, inq.description, inq.phone]
+        .filter(Boolean) // Remove null/undefined values
         .join(" ")
         .toLowerCase()
         .includes(searchTerm.toLowerCase())
@@ -115,7 +132,7 @@ function Dashboard() {
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-      <div className="flex-1 bg-white p-6">
+      <div className="flex-1 bg-gray-50 p-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
           <h1 className="text-3xl font-bold text-gray-800 flex items-center">
@@ -124,7 +141,7 @@ function Dashboard() {
           </h1>
           <button
             onClick={exportToExcel}
-            className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md"
+            className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-colors"
           >
             Export Excel
           </button>
@@ -134,12 +151,12 @@ function Dashboard() {
         <div className="mb-6 flex items-center space-x-4">
           <input
             type="text"
-            placeholder="Search by customer name, email, or description..."
-            className="flex-grow p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500"
+            placeholder="Search by customer name, email, phone, or description..."
+            className="flex-grow p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
             value={searchTerm}
             onChange={(e) => {
               setSearchTerm(e.target.value);
-              setCurrentPage(1); // reset to first page on search
+              setCurrentPage(1);
             }}
           />
           <button
@@ -147,7 +164,7 @@ function Dashboard() {
               setSearchTerm("");
               setCurrentPage(1);
             }}
-            className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md"
+            className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-3 rounded-lg transition-colors"
           >
             Clear
           </button>
@@ -156,90 +173,136 @@ function Dashboard() {
         {/* Inquiry Cards */}
         {paginatedInquiries.length > 0 ? (
           <div className="space-y-4">
-            {paginatedInquiries.map((inq) => (
-              <div
-                key={inq._id}
-                className="border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition"
-              >
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex-1">
-                    <h3 className="font-bold text-lg text-gray-800">
-                      {inq.customerName}
-                    </h3>
-                    <div className="text-sm text-gray-600 mt-1">
-                      {inq.email} | {inq.phone}
+            {paginatedInquiries.map((inq) => {
+              const totalItems = getTotalItems(inq);
+              const sizes = getSizesSummary(inq);
+              
+              return (
+                <div
+                  key={inq._id}
+                  className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex-1">
+                      <h3 className="font-bold text-xl text-gray-800">
+                        {inq.customerName}
+                      </h3>
+                      <div className="text-sm text-gray-600 mt-1">
+                        {inq.email} {inq.phone && `| ${inq.phone}`}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <select
+                        value={inq.status || "pending"}
+                        onChange={(e) =>
+                          handleStatusChange(inq._id, e.target.value)
+                        }
+                        className="border border-gray-300 rounded-lg text-sm px-3 py-2 bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      >
+                        <option value="pending">Pending</option>
+                        <option value="in-progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                      </select>
+                      <p className="text-xs text-gray-500 mt-2">
+                        {formatDate(inq.createdAt)}
+                      </p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <select
-                      value={inq.status || "pending"}
-                      onChange={(e) =>
-                        handleStatusChange(inq._id, e.target.value)
-                      }
-                      className="border border-gray-300 rounded-md text-sm px-2 py-1 bg-gray-50 focus:ring-2 focus:ring-green-500"
-                    >
-                      <option value="pending">Pending</option>
-                      <option value="in-progress">In Progress</option>
-                      <option value="completed">Completed</option>
-                      <option value="cancelled">Cancelled</option>
-                    </select>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {formatDate(inq.createdAt)}
-                    </p>
-                  </div>
-                </div>
 
-                <div className="flex items-center space-x-4 mb-2">
-                  {inq.designPreview && (
-                    <img
-                      src={inq.designPreview}
-                      alt="Design"
-                      className="w-16 h-16 object-contain rounded border"
-                    />
-                  )}
-                  <div className="flex-1">
-                    <p className="text-gray-700">{inq.description}</p>
-                    {inq.price && (
-                      <p className="text-sm text-green-700 font-semibold mt-1">
-                        Price: ${inq.price}
-                      </p>
+                  <div className="flex items-start space-x-4 mb-4">
+                    {inq.designPreview && (
+                      <img
+                        src={inq.designPreview}
+                        alt="Design"
+                        className="w-20 h-20 object-contain rounded-lg border border-gray-200"
+                      />
                     )}
+                    <div className="flex-1">
+                      <p className="text-gray-700 mb-2">{inq.description}</p>
+                      
+                      {/* Order Summary */}
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                        <div>
+                          <span className="text-gray-500">Total Items:</span>
+                          <span className="font-semibold ml-2">{totalItems}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Price:</span>
+                          <span className="font-semibold text-green-700 ml-2">
+                            {inq.price ? `Rs ${inq.price}` : 'Not set'}
+                          </span>
+                        </div>
+                        {inq.tshirtColor && (
+                          <div className="flex items-center">
+                            <span className="text-gray-500 mr-2">Color:</span>
+                            <div 
+                              className="w-4 h-4 rounded border border-gray-300"
+                              style={{ backgroundColor: inq.tshirtColor }}
+                            ></div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <div className="text-sm text-gray-500">
+                      Order ID: {inq._id}
+                    </div>
+                    <button
+                      onClick={() => navigate(`/designOrderDetails/${inq._id}`)}
+                      className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
+                    >
+                      View Details
+                    </button>
                   </div>
                 </div>
-
-                <div className="flex justify-end">
-                  <button
-                    onClick={() => navigate(`/designOrderDetails/${inq._id}`)}
-                    className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg"
-                  >
-                    View Details
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
-          <div className="text-center py-12 text-gray-500">
-            No design inquiries found.
+          <div className="text-center py-12 text-gray-500 bg-white rounded-xl border border-gray-200">
+            <div className="text-2xl mb-2">📋</div>
+            <p className="text-lg">No design inquiries found.</p>
+            {searchTerm && (
+              <p className="text-sm mt-2">Try adjusting your search terms</p>
+            )}
           </div>
         )}
 
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex justify-center mt-8 space-x-2">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="px-4 py-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+            >
+              Previous
+            </button>
+            
             {Array.from({ length: totalPages }, (_, i) => (
               <button
                 key={i}
                 onClick={() => setCurrentPage(i + 1)}
-                className={`px-3 py-1 rounded-md border ${
+                className={`px-4 py-2 rounded-lg border ${
                   currentPage === i + 1
-                    ? "bg-green-600 text-white"
-                    : "bg-white text-gray-600"
+                    ? "bg-green-600 text-white border-green-600"
+                    : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50"
                 }`}
               >
                 {i + 1}
               </button>
             ))}
+            
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="px-4 py-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+            >
+              Next
+            </button>
           </div>
         )}
       </div>
