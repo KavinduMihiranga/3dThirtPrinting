@@ -54,6 +54,7 @@ const exportToExcel = () => {
             const res = await axios.get("http://localhost:5000/api/customer");
             setCustomer(res.data.data || []);
             setLoading(false);
+            console.log("Fetched Customers:", res.data.data);
         } catch(error) {
             console.error("Error fetching Customer:", error);
             setLoading(false);
@@ -145,7 +146,7 @@ const exportToExcel = () => {
                     <td className="py-3 px-6">{customer.name}</td>
                     <td className="py-3 px-6">{customer.email}</td>
                     <td className="py-3 px-6">{customer.phone}</td>
-                    <td className="py-3 px-6">{customer.addressLine1}</td>
+                    <td className="py-3 px-6">{customer.address}</td>
                     <td className="py-3 px-6">{customer.status}</td>
                     <td className="py-3 px-6 text-center">
                       <button

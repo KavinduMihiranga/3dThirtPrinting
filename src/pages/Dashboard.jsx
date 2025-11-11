@@ -10,6 +10,7 @@ import Security from "../assets/security.png";
 import IconText from "../components/IconText.jsx";
 import SecurePayment from "../assets/secure-payment.png"; 
 import CustomerCare from "../assets/customer-care.png";
+import bannerImg from "/banner.jpg";
 
 function Dashboard(props) {
   const [products, setProducts] = useState([]);
@@ -42,6 +43,15 @@ function Dashboard(props) {
 
   return (
     <>
+    <div 
+    className="w-full bg-white"
+    >
+      <img
+        src={bannerImg}
+        alt="Tshirt Printing"
+        className="w-full h-full object-cover"
+      />
+    </div>
       <div className="text-center my-8">
         <h1 className="text-3xl md:text-4xl font-bold text-green-600 bg-gradient-to-r from-green-500 to-blue-600 bg-clip-text text-transparent">
           Kavindu T-Shirt Printing

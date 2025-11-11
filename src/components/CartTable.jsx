@@ -1,4 +1,4 @@
-import React from 'react';
+import React,{useState} from 'react';
 import { TrashIcon } from "@heroicons/react/24/outline";
 import TshirtImg from "../assets/TshirtPrintingImg.jpg";
 import { useCart } from "../pages/CartContext";
@@ -7,9 +7,55 @@ import { useNavigate } from "react-router-dom";
 function CartTable(props) {
   const navigate = useNavigate();
   const { cartItems, updateQuantity, removeItem } = useCart();
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
+
+ const handleDeleteClick = (itemId, itemName) => {
+    setItemToDelete({ id: itemId, name: itemName });
+    setShowConfirm(true);
+  };
+
+  const confirmDelete = () => {
+    if (itemToDelete) {
+      removeItem(itemToDelete.id);
+      setShowConfirm(false);
+      setItemToDelete(null);
+    }
+  };
+
+  const cancelDelete = () => {
+    setShowConfirm(false);
+    setItemToDelete(null);
+  };
 
   return (
     <div className="container mx-auto p-6">
+
+      {showConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
+            <h3 className="text-xl font-bold text-gray-800 mb-4">Confirm Delete</h3>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to remove "{itemToDelete?.name}" from your cart?
+            </p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={cancelDelete}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-200"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <h1 className="text-3xl font-bold mb-4">Shopping Cart</h1>
       <table className="w-full border-collapse border border-gray-300">
         <thead>
@@ -53,7 +99,8 @@ function CartTable(props) {
               <td className="p-3 border">
                 <button
                   className="text-red-500 hover:text-red-700"
-                  onClick={() => removeItem(item.id)}
+                  // onClick={() => removeItem(item.id)}
+                  onClick={() => handleDeleteClick(item.id, item.name)}
                 >
                   <TrashIcon className="w-6 h-6" />
                 </button>
