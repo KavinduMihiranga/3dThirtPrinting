@@ -65,7 +65,7 @@ const handleSubmit = () => {
       .then((response) => {
         console.log('Order updated:', response.data);
         setOrderSubmitted(false);
-        navigate('/order');
+        navigate('/orderDashboard');
       })
       .catch((error) => {
         console.error('Error updating order:', error.response?.data || error.message);
@@ -77,7 +77,7 @@ const handleSubmit = () => {
       .then((response) => {
         console.log('Order added:', response.data);
         setOrderSubmitted(false);
-        navigate('/order');
+        navigate('/orderDashboard');
       })
       .catch((error) => {
         console.error('Error adding order:', error.response?.data || error.message);
@@ -109,6 +109,7 @@ const handleSubmit = () => {
             <input
               type="text"
               name="customerName"
+              disabled={isEdit} // Disable in edit mode
               value={formData.customerName}
               onChange={handleChange}
               className="w-full border rounded px-3 py-2"
@@ -119,6 +120,7 @@ const handleSubmit = () => {
             <input
               type="text"
               name="tShirtName"
+              disabled={isEdit} // Disable in edit mode
               value={formData.tShirtName}
               onChange={handleChange}
               className="w-full border rounded px-3 py-2"
@@ -133,6 +135,7 @@ const handleSubmit = () => {
             <input
               type="text"
               name="address"
+              disabled={isEdit} // Disable in edit mode
               value={formData.address}
               onChange={handleChange}
               className="w-full border rounded px-3 py-2"
@@ -143,6 +146,7 @@ const handleSubmit = () => {
             <input
               type="number"
               name="qty"
+              disabled={isEdit} // Disable in edit mode
               value={formData.qty}
               onChange={handleChange}
               className="w-full border rounded px-3 py-2"
@@ -157,6 +161,7 @@ const handleSubmit = () => {
             <input
               type="date"
               name="date"
+              disabled={isEdit} // Disable in edit mode
               value={formData.date}
               onChange={handleChange}
               className="w-full border rounded px-3 py-2"
@@ -164,13 +169,16 @@ const handleSubmit = () => {
           </div>
           <div className="flex-1">
             <label className="block text-sm font-medium">Status</label>
-            <input
-              type="text"
+            <select
               name="status"
               value={formData.status}
               onChange={handleChange}
               className="w-full border rounded px-3 py-2"
-            />
+            >
+              <option value="Pending">Pending</option>
+              <option value="Processing">Processing</option>
+              <option value="Completed">Completed</option>
+            </select>
           </div>
         </div>
 

@@ -62,8 +62,8 @@ function Dashboard(props) {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 p-4">
         <DesignCard
           image={DesignImg}
-          title="Design 03"
-          description="Design T-shirt03"
+          title="Design Your T-shirt"
+          description="Design T-shirts online with our easy-to-use tool. Create custom graphics, add text, and see your design come to life!"
         />
         {getCurrentProducts().map((product) => (
           <CardComponent
@@ -77,6 +77,7 @@ function Dashboard(props) {
                 ? product.image
                 : `http://localhost:5000${product.image}`
             }
+            size={product.size}
             status={product.status}
             category={product.category}
             qty={product.qty}

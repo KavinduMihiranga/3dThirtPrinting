@@ -12,6 +12,7 @@ function AddProduct() {
   const [formData, setFormData] = useState({
     name: "",
     category: "",
+    size: "",
     description: "",
     price: "",
     qty: "",
@@ -75,6 +76,7 @@ function AddProduct() {
     const payload = new FormData();
     payload.append("name", formData.name);
     payload.append("category", formData.category);
+    payload.append("size", formData.size);
     payload.append("description", formData.description);
     payload.append("price", formData.price);
     payload.append("qty", formData.qty);
@@ -156,17 +158,34 @@ function AddProduct() {
             />
           </div>
         </div>
-
-        <div>
-          <label className="block text-sm font-medium">Description</label>
-          <textarea
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            className="w-full border rounded px-3 py-2"
-            required
-          />
+        <div className="flex gap-4">
+          <div className="flex-1">
+            <label className="block text-sm font-medium">Size</label>
+            <select
+              name="size"
+              value={formData.size}
+              onChange={handleChange}
+              className="w-full border rounded px-3 py-2"
+              required
+            >
+            <option value="">Select Size</option>
+            <option value="Small">Small</option>
+            <option value="Medium">Medium</option>
+            <option value="Large">Large</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium">Description</label>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              className="w-full border rounded px-3 py-2"
+              required
+            />
+          </div>
         </div>
+       
 
         <div className="flex gap-4">
           <div className="flex-1">
@@ -195,14 +214,17 @@ function AddProduct() {
 
         <div>
           <label className="block text-sm font-medium">Status</label>
-          <input
-            type="text"
+          <select            
             name="status"
             value={formData.status}
             onChange={handleChange}
             className="w-full border rounded px-3 py-2"
             required
-          />
+          >
+            <option value="">Select Status</option>
+            <option value="in stock">In Stock</option>
+            <option value="out of stock">Out of Stock</option>
+          </select>
         </div>
 
         <div>

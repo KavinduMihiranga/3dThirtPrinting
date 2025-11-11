@@ -49,6 +49,7 @@ function ProductPage() {
                 key={product._id}
                 id={product._id}
                 title={product.title || product.name}
+                size={product.size}
                 description={product.description}
                 price={product.price}
                 image={

@@ -13,6 +13,11 @@ function Dashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const [productPerPage, setProductsPerPage] = useState(10); // You can adjust this number
 
+
+  const indexOfLastProduct = currentPage * productPerPage;
+  const indexOfFirstProduct = indexOfLastProduct - productPerPage;
+  const currentProducts = products.slice(indexOfFirstProduct, indexOfLastProduct);
+
   // ✅ Export announcements as Excel file
   const exportToExcel = () => {
     if (!products || products.length === 0) {
@@ -24,6 +29,7 @@ function Dashboard() {
     const dataToExport = products.map((a, index) => ({
       "No": index + 1,
       "Product": a.name,
+      "Size": a.size,
       "Description": a.description,
       "Category": a.category,
       "Price": a.price,
@@ -116,6 +122,7 @@ function Dashboard() {
           <thead>
             <tr className="bg-gray-100 border-b border-gray-200 text-gray-600 uppercase text-sm leading-normal">
               <th className="py-3 px-6 text-left">Product</th>
+              <th className="py-3 px-6 text-left">Size</th>
               <th className="py-3 px-6 text-left">Description</th>
               <th className="py-3 px-6 text-left">Category</th>
               <th className="py-3 px-6 text-left">Price (LKR)</th>
@@ -131,9 +138,9 @@ function Dashboard() {
                   Loading products...
                 </td>
               </tr>
-            ) : filteredProducts.length > 0 ? (
-              filteredProducts.map((product) => (
-                <tr key={product._id} className="border-b border-gray-200 hover:bg-gray-50">
+            ) : currentProducts.length > 0 ? (
+              currentProducts.map((product, index) => (
+                <tr key={index} className="border-b border-gray-200 hover:bg-gray-50">
                   <td className="py-3 px-6 text-left">
                     <button
                       className="text-blue-500 hover:underline"
@@ -144,6 +151,7 @@ function Dashboard() {
                       {product.title || product.name}
                     </button>
                   </td>
+                 <td className="py-3 px-6 text-left">{product.size}</td>
                   <td className="py-3 px-6 text-left">
                     {product.description?.length > 50
                       ? `${product.description.substring(0, 50)}...`
@@ -157,7 +165,7 @@ function Dashboard() {
                   <td className="py-3 px-6 text-left">
                     <span
                       className={`px-2 py-1 rounded-full text-xs ${
-                        product.status === "in stock"
+                        product.status === "In Stock"
                           ? "bg-green-100 text-green-800"
                           : "bg-red-100 text-red-800"
                       }`}

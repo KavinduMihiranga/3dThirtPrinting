@@ -61,7 +61,7 @@ function ProductDetail() {
     const productToAdd = {
       id: product._id || product.id,
       name: product.title,
-      size: "Medium",
+      size: product.size,
       price: product.price,
       image: product.image,
     };
@@ -95,6 +95,10 @@ function ProductDetail() {
               <p className="text-gray-800">{product.category}</p>
             </div>
             <div>
+              <p className="text-gray-600 font-medium">Size</p>
+              <p className="text-gray-800">{product.size}</p>
+            </div>
+            <div>
               <p className="text-gray-600 font-medium">Status</p>
               <p className="text-gray-800">{product.status}</p>
             </div>
@@ -103,10 +107,11 @@ function ProductDetail() {
               <p className="text-2xl font-bold text-green-600">
                 Rs. {product.price}
               </p>
+              
             </div>
             <div>
               <p className="text-gray-600 font-medium">Quantity</p>
-              <p className="text-gray-800">{product.qty} in stock</p>
+              <p className="text-gray-800">{product.qty} In stock</p>
             </div>
           </div>
 
@@ -122,9 +127,9 @@ function ProductDetail() {
             >
               Add to Cart
             </button>
-            <button className="w-full bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 transition">
+            {/* <button className="w-full bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 transition">
               Buy Now
-            </button>
+            </button> */}
           </div>
         </div>
       </div>
