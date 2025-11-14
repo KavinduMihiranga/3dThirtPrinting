@@ -15,33 +15,233 @@ function Dashboard() {
   const [customerPerPage, setCustomersPerPage] = useState(10); // You can adjust this number
 
 // ✅ Export customer as Excel file
+// const exportToExcel = () => {
+//   if (!customer || customer.length === 0) {
+//     alert("No data available to export!");
+//     return;
+//   }
+
+//   // Convert announcement objects into sheet data
+//   const dataToExport = customer.map((a, index) => ({
+//     "No": index + 1,
+//     "Name": a.name,
+//     "Email": a.email,
+//     "Phone": a.phone,
+//     "Address": a.addressLine1,
+//     "Status": a.status,
+//     "Created Date": new Date(a.createdAt).toLocaleDateString(),
+//   }));
+
+//   // Create worksheet and workbook
+//   const workbook = XLSX.utils.book_new();
+
+//       // Start with headers and title - ALL IN ONE ARRAY
+//     const worksheetData = [
+//         ["Kavindu T-Shirt Printing"],
+//         ["Customer Management Report"],
+//         [`Generated on: ${new Date().toLocaleDateString()}`],
+//         [], // Empty row for spacing
+//         Object.keys(dataToExport[0]), // Column headers
+//         ...dataToExport.map(row => Object.values(row)) // Data rows
+//     ];
+
+//   // const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+//   // XLSX.utils.book_append_sheet(workbook, worksheet, "customer");
+
+//   // // Convert workbook to binary and trigger download
+//   // const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+//   // const data = new Blob([excelBuffer], { type: "application/octet-stream" });
+//   // saveAs(data, "Customer_Report.xlsx");
+
+//       // Create worksheet from the complete data array
+//       const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+  
+//       // Merge cells for headers
+//       if (!worksheet['!merges']) worksheet['!merges'] = [];
+//       worksheet['!merges'].push(
+//           { s: { r: 0, c: 0 }, e: { r: 0, c: 6 } }, // Company name
+//           { s: { r: 1, c: 0 }, e: { r: 1, c: 6 } }, // Report title
+//           { s: { r: 2, c: 0 }, e: { r: 2, c: 6 } }  // Generated date
+//       );
+//      // Style the header rows (A1, A2, A3)
+//     ['A1', 'A2', 'A3'].forEach(cell => {
+//         if (!worksheet[cell]) worksheet[cell] = { t: 's' };
+//         worksheet[cell].s = {
+//             font: { bold: true, color: { rgb: "FFFFFF" } },
+//             fill: { fgColor: { rgb: "4F81BD" } },
+//             alignment: { horizontal: "center" }
+//         };
+//     });
+
+//     // Style the column headers (row 5, which is index 4)
+//     const headerRowIndex = 4;
+//     for (let col = 0; col < Object.keys(dataToExport[0]).length; col++) {
+//         const cellRef = XLSX.utils.encode_cell({ r: headerRowIndex, c: col });
+//         if (!worksheet[cellRef]) worksheet[cellRef] = { t: 's' };
+//         worksheet[cellRef].s = {
+//             font: { bold: true },
+//             fill: { fgColor: { rgb: "DCE6F1" } },
+//             alignment: { horizontal: "center" },
+//             border: {
+//                 top: { style: 'thin', color: { rgb: "000000" } },
+//                 left: { style: 'thin', color: { rgb: "000000" } },
+//                 bottom: { style: 'thin', color: { rgb: "000000" } },
+//                 right: { style: 'thin', color: { rgb: "000000" } }
+//             }
+//         };
+//     }
+  
+//       // Style data rows
+//       const dataStartRow = headerRowIndex + 1;
+//       const dataEndRow = dataStartRow + dataToExport.length - 1;
+      
+//       for (let row = dataStartRow; row <= dataEndRow; row++) {
+//           for (let col = 0; col < Object.keys(dataToExport[0]).length; col++) {
+//               const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+//               if (worksheet[cellRef]) {
+//                   if (!worksheet[cellRef].s) worksheet[cellRef].s = {};
+//                   worksheet[cellRef].s.border = {
+//                       top: { style: 'thin', color: { rgb: "000000" } },
+//                       left: { style: 'thin', color: { rgb: "000000" } },
+//                       bottom: { style: 'thin', color: { rgb: "000000" } },
+//                       right: { style: 'thin', color: { rgb: "000000" } }
+//                   };
+//               }
+//           }
+//       }
+//      // Set column widths
+//     worksheet['!cols'] = [
+//         { wch: 5 },  // No
+//         { wch: 15 }, // Username
+//         { wch: 25 }, // Email
+//         { wch: 15 }, // Phone
+//         { wch: 15 }, // NIC
+//         { wch: 12 }, // Role
+//         { wch: 10 }, // Status
+//         { wch: 12 }, // Created Date
+//     ];
+//      // Add the worksheet to the workbook
+//      XLSX.utils.book_append_sheet(workbook, worksheet, "Customer");
+ 
+//      // Generate and save the Excel file
+//      const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+//      const data = new Blob([excelBuffer], { type: "application/octet-stream" });
+     
+//      // Generate filename with current date
+//      const dateStamp = new Date().toISOString().split('T')[0];
+//      saveAs(data, `Kavindu_TShirt_Printing_Customer_Management_${dateStamp}.xlsx`);      
+// };
+
 const exportToExcel = () => {
-  if (!customer || customer.length === 0) {
-    alert("No data available to export!");
-    return;
-  }
+    if (!customer || customer.length === 0) {
+      alert("No data available to export!");
+      return;
+    }
 
-  // Convert announcement objects into sheet data
-  const dataToExport = customer.map((a, index) => ({
-    "No": index + 1,
-    "Name": a.name,
-    "Email": a.email,
-    "Phone": a.phone,
-    "Address": a.addressLine1,
-    "Status": a.status,
-    "Created Date": new Date(a.createdAt).toLocaleDateString(),
-  }));
+    // Convert customer objects into sheet data - FIXED: Use address instead of addressLine1
+    const dataToExport = customer.map((a, index) => ({
+      "No": index + 1,
+      "Name": a.name || 'N/A',
+      "Email": a.email || 'N/A',
+      "Phone": a.phone || 'N/A',
+      "Address": a.address || 'N/A', // CHANGED: addressLine1 to address
+      "Status": a.status || 'Active',
+      "Created Date": a.createdAt ? new Date(a.createdAt).toLocaleDateString() : 'N/A',
+    }));
 
-  // Create worksheet and workbook
-  const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "customer");
+    // Create workbook
+    const workbook = XLSX.utils.book_new();
+    
+    // Start with headers and title - ALL IN ONE ARRAY
+    const worksheetData = [
+      ["Kavindu T-Shirt Printing"],
+      ["Customer Management Report"],
+      [`Generated on: ${new Date().toLocaleDateString()}`],
+      [], // Empty row for spacing
+      Object.keys(dataToExport[0]), // Column headers
+      ...dataToExport.map(row => Object.values(row)) // Data rows
+    ];
 
-  // Convert workbook to binary and trigger download
-  const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-  const data = new Blob([excelBuffer], { type: "application/octet-stream" });
-  saveAs(data, "Customer_Report.xlsx");
-};
+    // Create worksheet from the complete data array
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+
+    // Merge cells for headers
+    if (!worksheet['!merges']) worksheet['!merges'] = [];
+    worksheet['!merges'].push(
+      { s: { r: 0, c: 0 }, e: { r: 0, c: 5 } }, // Company name (6 columns)
+      { s: { r: 1, c: 0 }, e: { r: 1, c: 5 } }, // Report title (6 columns)
+      { s: { r: 2, c: 0 }, e: { r: 2, c: 5 } }  // Generated date (6 columns)
+    );
+
+    // Style the header rows (A1, A2, A3)
+    ['A1', 'A2', 'A3'].forEach(cell => {
+      if (!worksheet[cell]) worksheet[cell] = { t: 's' };
+      worksheet[cell].s = {
+        font: { bold: true, color: { rgb: "FFFFFF" } },
+        fill: { fgColor: { rgb: "4F81BD" } },
+        alignment: { horizontal: "center" }
+      };
+    });
+
+    // Style the column headers (row 5, which is index 4)
+    const headerRowIndex = 4;
+    for (let col = 0; col < Object.keys(dataToExport[0]).length; col++) {
+      const cellRef = XLSX.utils.encode_cell({ r: headerRowIndex, c: col });
+      if (!worksheet[cellRef]) worksheet[cellRef] = { t: 's' };
+      worksheet[cellRef].s = {
+        font: { bold: true },
+        fill: { fgColor: { rgb: "DCE6F1" } },
+        alignment: { horizontal: "center" },
+        border: {
+          top: { style: 'thin', color: { rgb: "000000" } },
+          left: { style: 'thin', color: { rgb: "000000" } },
+          bottom: { style: 'thin', color: { rgb: "000000" } },
+          right: { style: 'thin', color: { rgb: "000000" } }
+        }
+      };
+    }
+
+    // Style data rows
+    const dataStartRow = headerRowIndex + 1;
+    const dataEndRow = dataStartRow + dataToExport.length - 1;
+    
+    for (let row = dataStartRow; row <= dataEndRow; row++) {
+      for (let col = 0; col < Object.keys(dataToExport[0]).length; col++) {
+        const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+        if (worksheet[cellRef]) {
+          if (!worksheet[cellRef].s) worksheet[cellRef].s = {};
+          worksheet[cellRef].s.border = {
+            top: { style: 'thin', color: { rgb: "000000" } },
+            left: { style: 'thin', color: { rgb: "000000" } },
+            bottom: { style: 'thin', color: { rgb: "000000" } },
+            right: { style: 'thin', color: { rgb: "000000" } }
+          };
+        }
+      }
+    }
+
+    // Set column widths - UPDATED for Customer data
+    worksheet['!cols'] = [
+      { wch: 5 },  // No
+      { wch: 20 }, // Name
+      { wch: 25 }, // Email
+      { wch: 15 }, // Phone
+      { wch: 30 }, // Address (wider for addresses)
+      { wch: 10 }, // Status
+      { wch: 12 }, // Created Date
+    ];
+
+    // Add the worksheet to the workbook
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Customer");
+
+    // Generate and save the Excel file
+    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+    const data = new Blob([excelBuffer], { type: "application/octet-stream" });
+    
+    // Generate filename with current date
+    const dateStamp = new Date().toISOString().split('T')[0];
+    saveAs(data, `Kavindu_TShirt_Printing_Customer_Management_${dateStamp}.xlsx`);
+  };
 
 
   // Fetch customers

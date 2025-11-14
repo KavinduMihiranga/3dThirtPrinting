@@ -53,31 +53,270 @@ function Dashboard() {
     );
 
     // ✅ Export admin as Excel file
-    const exportToExcel = () => {
-        if (!admin || admin.length === 0) {
-            alert("No data available to export!");
-            return;
+    // const exportToExcel = () => {
+    //     if (!admin || admin.length === 0) {
+    //         alert("No data available to export!");
+    //         return;
+    //     }
+
+    //      const dataToExport = admin.map((a, index) => ({
+    //         "No": index + 1,
+    //         "Username": a.username || 'N/A',
+    //         "Email": a.email || 'N/A',
+    //         "Phone": a.phone || 'N/A',
+    //         "NIC": a.nic || 'N/A',
+    //         "Role": a.role || 'N/A',
+    //         "Status": a.status || 'Active',
+    //         "Created Date": a.createdAt ? new Date(a.createdAt).toLocaleDateString() : 'N/A',
+    // }));
+
+
+    //      // Create workbook and worksheet
+    //     const workbook = XLSX.utils.book_new();
+        
+
+    //      // Merge cells for headers
+    //     if (!worksheet['!merges']) worksheet['!merges'] = [];
+    //     worksheet['!merges'].push(
+    //         { s: { r: 0, c: 0 }, e: { r: 0, c: 6 } }, // Company name
+    //         { s: { r: 1, c: 0 }, e: { r: 1, c: 6 } }, // Report title
+    //         { s: { r: 2, c: 0 }, e: { r: 2, c: 6 } }  // Generated date
+    //     );
+
+    // // Style the header rows (A1, A2, A3)
+    //     ['A1', 'A2', 'A3'].forEach(cell => {
+    //         if (!worksheet[cell]) worksheet[cell] = { t: 's' };
+    //         worksheet[cell].s = {
+    //             font: { bold: true, color: { rgb: "FFFFFF" } },
+    //             fill: { fgColor: { rgb: "4F81BD" } },
+    //             alignment: { horizontal: "center" }
+    //         };
+    //     });
+
+    //         // Style the column headers (row 5, which is index 4)
+    // const headerRowIndex = 4;
+    // for (let col = 0; col < Object.keys(dataToExport[0]).length; col++) {
+    //     const cellRef = XLSX.utils.encode_cell({ r: headerRowIndex, c: col });
+    //     if (!worksheet[cellRef]) worksheet[cellRef] = { t: 's' };
+    //     worksheet[cellRef].s = {
+    //         font: { bold: true },
+    //         fill: { fgColor: { rgb: "DCE6F1" } },
+    //         alignment: { horizontal: "center" },
+    //         border: {
+    //             top: { style: 'thin', color: { rgb: "000000" } },
+    //             left: { style: 'thin', color: { rgb: "000000" } },
+    //             bottom: { style: 'thin', color: { rgb: "000000" } },
+    //             right: { style: 'thin', color: { rgb: "000000" } }
+    //         }
+    //     };
+    // }
+    //     // Start with headers and title
+    //     const worksheetData = [
+    //         ["Kavindu T-Shirt Printing"],
+    //         ["Admin Management Report"],
+    //         [`Generated on: ${new Date().toLocaleDateString()}`],
+    //         [], // Empty row for spacing
+    //         Object.keys(dataToExport[0]), // Column headers
+    //         ...dataToExport.map(row => Object.values(row)) // Data rows
+    //     ];
+    //     const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+
+
+        
+    //     // Add company name and title at the top
+    //     const companyName = "Kavindu T-Shirt Printing";
+    //     const reportTitle = "Admin Management Report";
+    //     const generatedDate = `Generated on: ${new Date().toLocaleDateString()}`;
+
+    //     // Add header rows
+    //         XLSX.utils.sheet_add_aoa(worksheet, [
+    //             [companyName],
+    //             [reportTitle],
+    //             [generatedDate],
+    //             [], // Empty row for spacing
+    //             Object.keys(dataToExport[0]) // Column headers
+    //         ], { origin: 'A1' });
+
+    //         // Add the data starting from row 6 (after headers)
+    //         XLSX.utils.sheet_add_json(worksheet, dataToExport, { 
+    //             origin: 'A6', 
+    //             skipHeader: true 
+    //         });
+
+    //         // Merge cells for company name, title, and date for better appearance
+    //             if (!worksheet['!merges']) worksheet['!merges'] = [];
+    //             worksheet['!merges'].push(
+    //                 { s: { r: 0, c: 0 }, e: { r: 0, c: 6 } }, // Merge company name across all columns
+    //                 { s: { r: 1, c: 0 }, e: { r: 1, c: 6 } }, // Merge title across all columns
+    //                 { s: { r: 2, c: 0 }, e: { r: 2, c: 6 } }  // Merge date across all columns
+    //             );
+
+    //             // Style the header rows
+    //             const headerStyle = {
+    //                 font: { bold: true, color: { rgb: "FFFFFF" } },
+    //                 fill: { fgColor: { rgb: "4F81BD" } }, // Blue background
+    //                 alignment: { horizontal: "center" }
+    //             };
+
+    //             // Apply styles to header cells
+    //             ['A1', 'A2', 'A3'].forEach(cell => {
+    //                 if (!worksheet[cell]) worksheet[cell] = {};
+    //                 worksheet[cell].s = headerStyle;
+    //             });
+
+    //             // Apply styles to column headers (row 5)
+    //             Object.keys(dataToExport[0]).forEach((_, colIndex) => {
+    //                 const cellRef = XLSX.utils.encode_cell({ r: 4, c: colIndex });
+    //                 if (!worksheet[cellRef]) worksheet[cellRef] = {};
+    //                 worksheet[cellRef].s = {
+    //                     font: { bold: true },
+    //                     fill: { fgColor: { rgb: "DCE6F1" } }, // Light blue background
+    //                     alignment: { horizontal: "center" }
+    //                 };
+    //             });
+
+    //             // Set column widths for better readability
+    //             worksheet['!cols'] = [
+    //                 { wch: 5 },  // No
+    //                 { wch: 15 }, // Username
+    //                 { wch: 25 }, // Email
+    //                 { wch: 15 }, // Phone
+    //                 { wch: 15 }, // NIC
+    //                 { wch: 12 }, // Role
+    //                 { wch: 10 }, // Status
+    //                 { wch: 12 }, // Created Date
+    //             ];
+
+    //             // Add the worksheet to the workbook
+    //             XLSX.utils.book_append_sheet(workbook, worksheet, "Admins");
+
+    //             // Generate and save the Excel file
+    //             const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+    //             const data = new Blob([excelBuffer], { type: "application/octet-stream" });
+                
+    //             // Generate filename with current date
+    //             const dateStamp = new Date().toISOString().split('T')[0];
+    //             saveAs(data, `Kavindu_TShirt_Printing_Admin_Management_${dateStamp}.xlsx`);
+
+    //     // XLSX.utils.book_append_sheet(workbook, worksheet, "Admins");
+
+    //     // const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+    //     // const data = new Blob([excelBuffer], { type: "application/octet-stream" });
+    //     // saveAs(data, "Admins_Report.xlsx");
+    // };
+
+    // ✅ Export admin as Excel file
+const exportToExcel = () => {
+    if (!admin || admin.length === 0) {
+        alert("No data available to export!");
+        return;
+    }
+
+    const dataToExport = admin.map((a, index) => ({
+        "No": index + 1,
+        "Username": a.username || 'N/A',
+        "Email": a.email || 'N/A',
+        "Phone": a.phone || 'N/A',
+        "NIC": a.nic || 'N/A',
+        "Role": a.role || 'N/A',
+        "Status": a.status || 'Active',
+        "Created Date": a.createdAt ? new Date(a.createdAt).toLocaleDateString() : 'N/A',
+    }));
+
+    // Create workbook
+    const workbook = XLSX.utils.book_new();
+    
+    // Start with headers and title - ALL IN ONE ARRAY
+    const worksheetData = [
+        ["Kavindu T-Shirt Printing"],
+        ["Admin Management Report"],
+        [`Generated on: ${new Date().toLocaleDateString()}`],
+        [], // Empty row for spacing
+        Object.keys(dataToExport[0]), // Column headers
+        ...dataToExport.map(row => Object.values(row)) // Data rows
+    ];
+
+    // Create worksheet from the complete data array
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+
+    // Merge cells for headers
+    if (!worksheet['!merges']) worksheet['!merges'] = [];
+    worksheet['!merges'].push(
+        { s: { r: 0, c: 0 }, e: { r: 0, c: 6 } }, // Company name
+        { s: { r: 1, c: 0 }, e: { r: 1, c: 6 } }, // Report title
+        { s: { r: 2, c: 0 }, e: { r: 2, c: 6 } }  // Generated date
+    );
+
+    // Style the header rows (A1, A2, A3)
+    ['A1', 'A2', 'A3'].forEach(cell => {
+        if (!worksheet[cell]) worksheet[cell] = { t: 's' };
+        worksheet[cell].s = {
+            font: { bold: true, color: { rgb: "FFFFFF" } },
+            fill: { fgColor: { rgb: "4F81BD" } },
+            alignment: { horizontal: "center" }
+        };
+    });
+
+    // Style the column headers (row 5, which is index 4)
+    const headerRowIndex = 4;
+    for (let col = 0; col < Object.keys(dataToExport[0]).length; col++) {
+        const cellRef = XLSX.utils.encode_cell({ r: headerRowIndex, c: col });
+        if (!worksheet[cellRef]) worksheet[cellRef] = { t: 's' };
+        worksheet[cellRef].s = {
+            font: { bold: true },
+            fill: { fgColor: { rgb: "DCE6F1" } },
+            alignment: { horizontal: "center" },
+            border: {
+                top: { style: 'thin', color: { rgb: "000000" } },
+                left: { style: 'thin', color: { rgb: "000000" } },
+                bottom: { style: 'thin', color: { rgb: "000000" } },
+                right: { style: 'thin', color: { rgb: "000000" } }
+            }
+        };
+    }
+
+    // Style data rows
+    const dataStartRow = headerRowIndex + 1;
+    const dataEndRow = dataStartRow + dataToExport.length - 1;
+    
+    for (let row = dataStartRow; row <= dataEndRow; row++) {
+        for (let col = 0; col < Object.keys(dataToExport[0]).length; col++) {
+            const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+            if (worksheet[cellRef]) {
+                if (!worksheet[cellRef].s) worksheet[cellRef].s = {};
+                worksheet[cellRef].s.border = {
+                    top: { style: 'thin', color: { rgb: "000000" } },
+                    left: { style: 'thin', color: { rgb: "000000" } },
+                    bottom: { style: 'thin', color: { rgb: "000000" } },
+                    right: { style: 'thin', color: { rgb: "000000" } }
+                };
+            }
         }
+    }
 
-        const dataToExport = admin.map((a, index) => ({
-            "No": index + 1,
-            "Username": a.username || 'N/A',
-            "Email": a.email || 'N/A',
-            "Phone": a.phone || 'N/A',
-            "NIC": a.nic || 'N/A',
-            "Role": a.role || 'N/A',
-            "Status": a.status || 'Active',
-            "Created Date": a.createdAt ? new Date(a.createdAt).toLocaleDateString() : 'N/A',
-        }));
+    // Set column widths
+    worksheet['!cols'] = [
+        { wch: 5 },  // No
+        { wch: 15 }, // Username
+        { wch: 25 }, // Email
+        { wch: 15 }, // Phone
+        { wch: 15 }, // NIC
+        { wch: 12 }, // Role
+        { wch: 10 }, // Status
+        { wch: 12 }, // Created Date
+    ];
 
-        const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Admins");
+    // Add the worksheet to the workbook
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Admins");
 
-        const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-        const data = new Blob([excelBuffer], { type: "application/octet-stream" });
-        saveAs(data, "Admins_Report.xlsx");
-    };
+    // Generate and save the Excel file
+    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+    const data = new Blob([excelBuffer], { type: "application/octet-stream" });
+    
+    // Generate filename with current date
+    const dateStamp = new Date().toISOString().split('T')[0];
+    saveAs(data, `Kavindu_TShirt_Printing_Admin_Management_${dateStamp}.xlsx`);
+};
 
     useEffect(() => {
         // Check if user is authenticated

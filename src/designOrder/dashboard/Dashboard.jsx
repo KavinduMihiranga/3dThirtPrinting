@@ -52,33 +52,152 @@ function Dashboard() {
     }
   };
 
+  // const exportToExcel = () => {
+  //   if (inquiries.length === 0) {
+  //     alert("No data available to export!");
+  //     return;
+  //   }
+
+  //   const dataToExport = inquiries.map((inq, index) => ({
+  //     No: index + 1,
+  //     "Customer Name": inq.customerName,
+  //     Email: inq.email,
+  //     Phone: inq.phone || "N/A",
+  //     Description: inq.description,
+  //     "Total Items": inq.totalItems || 0,
+  //     "Total Price": inq.totalPrice ? `Rs ${inq.totalPrice}` : "N/A",
+  //     Status: inq.status,
+  //     Price: inq.price ? `Rs ${inq.price}` : "N/A",
+  //     "Created Date": new Date(inq.createdAt).toLocaleString(),
+  //   }));
+
+  //   const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+  //   const workbook = XLSX.utils.book_new();
+  //   XLSX.utils.book_append_sheet(workbook, worksheet, "Design_Inquiries");
+
+  //   const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+  //   const data = new Blob([excelBuffer], { type: "application/octet-stream" });
+  //   saveAs(data, "Design_Inquiry_Report.xlsx");
+  // };
+
   const exportToExcel = () => {
-    if (inquiries.length === 0) {
-      alert("No data available to export!");
-      return;
+  if (inquiries.length === 0) {
+    alert("No data available to export!");
+    return;
+  }
+
+  // Convert inquiry objects into sheet data
+  const dataToExport = inquiries.map((inq, index) => ({
+    No: index + 1,
+    "Customer Name": inq.customerName || 'N/A',
+    Email: inq.email || 'N/A',
+    Phone: inq.phone || "N/A",
+    Description: inq.description || 'N/A',
+    "Total Items": getTotalItems(inq),
+    "Total Price": inq.totalPrice ? `Rs ${inq.totalPrice}` : "N/A",
+    "T-Shirt Price": inq.price ? `Rs ${inq.price}` : "N/A",
+    "T-Shirt Color": inq.tshirtColor || 'N/A',
+    Status: inq.status || 'pending',
+    "Created Date": inq.createdAt ? new Date(inq.createdAt).toLocaleString() : 'N/A',
+  }));
+
+  // Create workbook
+  const workbook = XLSX.utils.book_new();
+  
+  // Start with headers and title - ALL IN ONE ARRAY
+  const worksheetData = [
+    ["Kavindu T-Shirt Printing"],
+    ["Design Order Management Report"],
+    [`Generated on: ${new Date().toLocaleDateString()}`],
+    [], // Empty row for spacing
+    Object.keys(dataToExport[0]), // Column headers
+    ...dataToExport.map(row => Object.values(row)) // Data rows
+  ];
+
+  // Create worksheet from the complete data array
+  const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+
+  // Merge cells for headers
+  if (!worksheet['!merges']) worksheet['!merges'] = [];
+  worksheet['!merges'].push(
+    { s: { r: 0, c: 0 }, e: { r: 0, c: 8 } }, // Company name (9 columns)
+    { s: { r: 1, c: 0 }, e: { r: 1, c: 8 } }, // Report title (9 columns)
+    { s: { r: 2, c: 0 }, e: { r: 2, c: 8 } }  // Generated date (9 columns)
+  );
+
+  // Style the header rows (A1, A2, A3)
+  ['A1', 'A2', 'A3'].forEach(cell => {
+    if (!worksheet[cell]) worksheet[cell] = { t: 's' };
+    worksheet[cell].s = {
+      font: { bold: true, color: { rgb: "FFFFFF" } },
+      fill: { fgColor: { rgb: "4F81BD" } },
+      alignment: { horizontal: "center" }
+    };
+  });
+
+  // Style the column headers (row 5, which is index 4)
+  const headerRowIndex = 4;
+  for (let col = 0; col < Object.keys(dataToExport[0]).length; col++) {
+    const cellRef = XLSX.utils.encode_cell({ r: headerRowIndex, c: col });
+    if (!worksheet[cellRef]) worksheet[cellRef] = { t: 's' };
+    worksheet[cellRef].s = {
+      font: { bold: true },
+      fill: { fgColor: { rgb: "DCE6F1" } },
+      alignment: { horizontal: "center" },
+      border: {
+        top: { style: 'thin', color: { rgb: "000000" } },
+        left: { style: 'thin', color: { rgb: "000000" } },
+        bottom: { style: 'thin', color: { rgb: "000000" } },
+        right: { style: 'thin', color: { rgb: "000000" } }
+      }
+    };
+  }
+
+  // Style data rows
+  const dataStartRow = headerRowIndex + 1;
+  const dataEndRow = dataStartRow + dataToExport.length - 1;
+  
+  for (let row = dataStartRow; row <= dataEndRow; row++) {
+    for (let col = 0; col < Object.keys(dataToExport[0]).length; col++) {
+      const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+      if (worksheet[cellRef]) {
+        if (!worksheet[cellRef].s) worksheet[cellRef].s = {};
+        worksheet[cellRef].s.border = {
+          top: { style: 'thin', color: { rgb: "000000" } },
+          left: { style: 'thin', color: { rgb: "000000" } },
+          bottom: { style: 'thin', color: { rgb: "000000" } },
+          right: { style: 'thin', color: { rgb: "000000" } }
+        };
+      }
     }
+  }
 
-    const dataToExport = inquiries.map((inq, index) => ({
-      No: index + 1,
-      "Customer Name": inq.customerName,
-      Email: inq.email,
-      Phone: inq.phone || "N/A",
-      Description: inq.description,
-      "Total Items": inq.totalItems || 0,
-      "Total Price": inq.totalPrice ? `Rs ${inq.totalPrice}` : "N/A",
-      Status: inq.status,
-      Price: inq.price ? `Rs ${inq.price}` : "N/A",
-      "Created Date": new Date(inq.createdAt).toLocaleString(),
-    }));
+  // Set column widths for Design Order data
+  worksheet['!cols'] = [
+    { wch: 5 },   // No
+    { wch: 20 },  // Customer Name
+    { wch: 25 },  // Email
+    { wch: 15 },  // Phone
+    { wch: 40 },  // Description (wider for design descriptions)
+    { wch: 12 },  // Total Items
+    { wch: 15 },  // Total Price
+    { wch: 15 },  // T-Shirt Price
+    { wch: 15 },  // T-Shirt Color
+    { wch: 12 },  // Status
+    { wch: 20 },  // Created Date
+  ];
 
-    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Design_Inquiries");
+  // Add the worksheet to the workbook
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Design_Orders");
 
-    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-    const data = new Blob([excelBuffer], { type: "application/octet-stream" });
-    saveAs(data, "Design_Inquiry_Report.xlsx");
-  };
+  // Generate and save the Excel file
+  const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+  const data = new Blob([excelBuffer], { type: "application/octet-stream" });
+  
+  // Generate filename with current date
+  const dateStamp = new Date().toISOString().split('T')[0];
+  saveAs(data, `Kavindu_TShirt_Printing_Design_Order_Management_${dateStamp}.xlsx`);
+};
 
   const formatDate = (dateString) =>
     new Date(dateString).toLocaleString("en-US", {
@@ -141,7 +260,7 @@ function Dashboard() {
           </h1>
           <button
             onClick={exportToExcel}
-            className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-colors"
+            className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-colors"
           >
             Export Excel
           </button>

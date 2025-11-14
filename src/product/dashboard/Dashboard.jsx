@@ -19,35 +19,151 @@ function Dashboard() {
   const currentProducts = products.slice(indexOfFirstProduct, indexOfLastProduct);
 
   // ✅ Export announcements as Excel file
-  const exportToExcel = () => {
-    if (!products || products.length === 0) {
-      alert("No data available to export!");
-      return;
+  // const exportToExcel = () => {
+  //   if (!products || products.length === 0) {
+  //     alert("No data available to export!");
+  //     return;
+  //   }
+  
+  //   // Convert announcement objects into sheet data
+  //   const dataToExport = products.map((a, index) => ({
+  //     "No": index + 1,
+  //     "Product": a.name,
+  //     "Size": a.size,
+  //     "Description": a.description,
+  //     "Category": a.category,
+  //     "Price": a.price,
+  //     "Stock": a.qty,
+  //     "Status": a.status,
+  //     "Created Date": new Date(a.createdAt).toLocaleDateString(),
+  //   }));
+  
+  //   // Create worksheet and workbook
+  //   const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+  //   const workbook = XLSX.utils.book_new();
+  //   XLSX.utils.book_append_sheet(workbook, worksheet, "Products");
+  
+  //   // Convert workbook to binary and trigger download
+  //   const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+  //   const data = new Blob([excelBuffer], { type: "application/octet-stream" });
+  //   saveAs(data, "Products_Report.xlsx");
+  // };
+
+// ✅ Export products as Excel file
+const exportToExcel = () => {
+  if (!products || products.length === 0) {
+    alert("No data available to export!");
+    return;
+  }
+
+  // Convert product objects into sheet data
+  const dataToExport = products.map((a, index) => ({
+    "No": index + 1,
+    "Product": a.title || a.name || 'N/A',
+    "Size": a.size || 'N/A',
+    "Description": a.description || 'N/A',
+    "Category": a.category || 'N/A',
+    "Price (LKR)": a.price ? `LKR ${a.price.toLocaleString()}` : 'N/A',
+    "Stock": a.qty || 0,
+    "Status": a.status || 'In Stock',
+    "Created Date": a.createdAt ? new Date(a.createdAt).toLocaleDateString() : 'N/A',
+  }));
+
+  // Create workbook
+  const workbook = XLSX.utils.book_new();
+  
+  // Start with headers and title - ALL IN ONE ARRAY
+  const worksheetData = [
+    ["Kavindu T-Shirt Printing"],
+    ["Product Management Report"],
+    [`Generated on: ${new Date().toLocaleDateString()}`],
+    [], // Empty row for spacing
+    Object.keys(dataToExport[0]), // Column headers
+    ...dataToExport.map(row => Object.values(row)) // Data rows
+  ];
+
+  // Create worksheet from the complete data array
+  const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+
+  // Merge cells for headers
+  if (!worksheet['!merges']) worksheet['!merges'] = [];
+  worksheet['!merges'].push(
+    { s: { r: 0, c: 0 }, e: { r: 0, c: 7 } }, // Company name (8 columns)
+    { s: { r: 1, c: 0 }, e: { r: 1, c: 7 } }, // Report title (8 columns)
+    { s: { r: 2, c: 0 }, e: { r: 2, c: 7 } }  // Generated date (8 columns)
+  );
+
+  // Style the header rows (A1, A2, A3)
+  ['A1', 'A2', 'A3'].forEach(cell => {
+    if (!worksheet[cell]) worksheet[cell] = { t: 's' };
+    worksheet[cell].s = {
+      font: { bold: true, color: { rgb: "FFFFFF" } },
+      fill: { fgColor: { rgb: "4F81BD" } },
+      alignment: { horizontal: "center" }
+    };
+  });
+
+  // Style the column headers (row 5, which is index 4)
+  const headerRowIndex = 4;
+  for (let col = 0; col < Object.keys(dataToExport[0]).length; col++) {
+    const cellRef = XLSX.utils.encode_cell({ r: headerRowIndex, c: col });
+    if (!worksheet[cellRef]) worksheet[cellRef] = { t: 's' };
+    worksheet[cellRef].s = {
+      font: { bold: true },
+      fill: { fgColor: { rgb: "DCE6F1" } },
+      alignment: { horizontal: "center" },
+      border: {
+        top: { style: 'thin', color: { rgb: "000000" } },
+        left: { style: 'thin', color: { rgb: "000000" } },
+        bottom: { style: 'thin', color: { rgb: "000000" } },
+        right: { style: 'thin', color: { rgb: "000000" } }
+      }
+    };
+  }
+
+  // Style data rows
+  const dataStartRow = headerRowIndex + 1;
+  const dataEndRow = dataStartRow + dataToExport.length - 1;
+  
+  for (let row = dataStartRow; row <= dataEndRow; row++) {
+    for (let col = 0; col < Object.keys(dataToExport[0]).length; col++) {
+      const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+      if (worksheet[cellRef]) {
+        if (!worksheet[cellRef].s) worksheet[cellRef].s = {};
+        worksheet[cellRef].s.border = {
+          top: { style: 'thin', color: { rgb: "000000" } },
+          left: { style: 'thin', color: { rgb: "000000" } },
+          bottom: { style: 'thin', color: { rgb: "000000" } },
+          right: { style: 'thin', color: { rgb: "000000" } }
+        };
+      }
     }
+  }
+
+  // Set column widths for Product data
+  worksheet['!cols'] = [
+    { wch: 5 },   // No
+    { wch: 20 },  // Product
+    { wch: 10 },  // Size
+    { wch: 30 },  // Description
+    { wch: 15 },  // Category
+    { wch: 15 },  // Price (LKR)
+    { wch: 8 },   // Stock
+    { wch: 12 },  // Status
+    { wch: 12 },  // Created Date
+  ];
+
+  // Add the worksheet to the workbook
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Products");
+
+  // Generate and save the Excel file
+  const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+  const data = new Blob([excelBuffer], { type: "application/octet-stream" });
   
-    // Convert announcement objects into sheet data
-    const dataToExport = products.map((a, index) => ({
-      "No": index + 1,
-      "Product": a.name,
-      "Size": a.size,
-      "Description": a.description,
-      "Category": a.category,
-      "Price": a.price,
-      "Stock": a.qty,
-      "Status": a.status,
-      "Created Date": new Date(a.createdAt).toLocaleDateString(),
-    }));
-  
-    // Create worksheet and workbook
-    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Products");
-  
-    // Convert workbook to binary and trigger download
-    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-    const data = new Blob([excelBuffer], { type: "application/octet-stream" });
-    saveAs(data, "Products_Report.xlsx");
-  };
+  // Generate filename with current date
+  const dateStamp = new Date().toISOString().split('T')[0];
+  saveAs(data, `Kavindu_TShirt_Printing_Product_Management_${dateStamp}.xlsx`);
+};
 
   useEffect(() => {
     getProducts();

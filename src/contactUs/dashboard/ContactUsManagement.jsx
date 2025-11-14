@@ -70,35 +70,155 @@ function ContactUsManagement() {
     }
   };
 
-  const exportToExcel = () => {
-    if (contacts.length === 0) {
-      alert("No data available to export!");
-      return;
+  // const exportToExcel = () => {
+  //   if (contacts.length === 0) {
+  //     alert("No data available to export!");
+  //     return;
+  //   }
+
+  //   const dataToExport = contacts.map((contact, index) => ({
+  //     No: index + 1,
+  //     "Customer Name": contact.name,
+  //     Email: contact.email,
+  //     Phone: contact.phone,
+  //     Subject: contact.subject,
+  //     Message: contact.message,
+  //     Quantity: contact.quantity || "N/A",
+  //     Address: contact.address || "N/A",
+  //     Status: contact.status,
+  //     Priority: contact.priority,
+  //     "Assigned To": contact.assignedTo || "N/A",
+  //     "Created Date": new Date(contact.createdAt).toLocaleString(),
+  //   }));
+
+  //   const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+  //   const workbook = XLSX.utils.book_new();
+  //   XLSX.utils.book_append_sheet(workbook, worksheet, "Contact_Us_Requests");
+
+  //   const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+  //   const data = new Blob([excelBuffer], { type: "application/octet-stream" });
+  //   saveAs(data, "Contact_Us_Requests_Report.xlsx");
+  // };
+const exportToExcel = () => {
+  if (contacts.length === 0) {
+    alert("No data available to export!");
+    return;
+  }
+
+  // Convert contact objects into sheet data
+  const dataToExport = contacts.map((contact, index) => ({
+    No: index + 1,
+    "Customer Name": contact.name || 'N/A',
+    Email: contact.email || 'N/A',
+    Phone: contact.phone || 'N/A',
+    Subject: contact.subject || 'N/A',
+    Message: contact.message || 'N/A',
+    Quantity: contact.quantity || "N/A",
+    Address: contact.address || "N/A",
+    Status: contact.status || 'new',
+    Priority: contact.priority || 'medium',
+    "Assigned To": contact.assignedTo || "N/A",
+    "Created Date": contact.createdAt ? new Date(contact.createdAt).toLocaleString() : 'N/A',
+  }));
+
+  // Create workbook
+  const workbook = XLSX.utils.book_new();
+  
+  // Start with headers and title - ALL IN ONE ARRAY
+  const worksheetData = [
+    ["Kavindu T-Shirt Printing"],
+    ["Contact Us Management Report"],
+    [`Generated on: ${new Date().toLocaleDateString()}`],
+    [], // Empty row for spacing
+    Object.keys(dataToExport[0]), // Column headers
+    ...dataToExport.map(row => Object.values(row)) // Data rows
+  ];
+
+  // Create worksheet from the complete data array
+  const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+
+  // Merge cells for headers
+  if (!worksheet['!merges']) worksheet['!merges'] = [];
+  worksheet['!merges'].push(
+    { s: { r: 0, c: 0 }, e: { r: 0, c: 9 } }, // Company name (10 columns)
+    { s: { r: 1, c: 0 }, e: { r: 1, c: 9 } }, // Report title (10 columns)
+    { s: { r: 2, c: 0 }, e: { r: 2, c: 9 } }  // Generated date (10 columns)
+  );
+
+  // Style the header rows (A1, A2, A3)
+  ['A1', 'A2', 'A3'].forEach(cell => {
+    if (!worksheet[cell]) worksheet[cell] = { t: 's' };
+    worksheet[cell].s = {
+      font: { bold: true, color: { rgb: "FFFFFF" } },
+      fill: { fgColor: { rgb: "4F81BD" } },
+      alignment: { horizontal: "center" }
+    };
+  });
+
+  // Style the column headers (row 5, which is index 4)
+  const headerRowIndex = 4;
+  for (let col = 0; col < Object.keys(dataToExport[0]).length; col++) {
+    const cellRef = XLSX.utils.encode_cell({ r: headerRowIndex, c: col });
+    if (!worksheet[cellRef]) worksheet[cellRef] = { t: 's' };
+    worksheet[cellRef].s = {
+      font: { bold: true },
+      fill: { fgColor: { rgb: "DCE6F1" } },
+      alignment: { horizontal: "center" },
+      border: {
+        top: { style: 'thin', color: { rgb: "000000" } },
+        left: { style: 'thin', color: { rgb: "000000" } },
+        bottom: { style: 'thin', color: { rgb: "000000" } },
+        right: { style: 'thin', color: { rgb: "000000" } }
+      }
+    };
+  }
+
+  // Style data rows
+  const dataStartRow = headerRowIndex + 1;
+  const dataEndRow = dataStartRow + dataToExport.length - 1;
+  
+  for (let row = dataStartRow; row <= dataEndRow; row++) {
+    for (let col = 0; col < Object.keys(dataToExport[0]).length; col++) {
+      const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+      if (worksheet[cellRef]) {
+        if (!worksheet[cellRef].s) worksheet[cellRef].s = {};
+        worksheet[cellRef].s.border = {
+          top: { style: 'thin', color: { rgb: "000000" } },
+          left: { style: 'thin', color: { rgb: "000000" } },
+          bottom: { style: 'thin', color: { rgb: "000000" } },
+          right: { style: 'thin', color: { rgb: "000000" } }
+        };
+      }
     }
+  }
 
-    const dataToExport = contacts.map((contact, index) => ({
-      No: index + 1,
-      "Customer Name": contact.name,
-      Email: contact.email,
-      Phone: contact.phone,
-      Subject: contact.subject,
-      Message: contact.message,
-      Quantity: contact.quantity || "N/A",
-      Address: contact.address || "N/A",
-      Status: contact.status,
-      Priority: contact.priority,
-      "Assigned To": contact.assignedTo || "N/A",
-      "Created Date": new Date(contact.createdAt).toLocaleString(),
-    }));
+  // Set column widths for Contact Us data
+  worksheet['!cols'] = [
+    { wch: 5 },   // No
+    { wch: 20 },  // Customer Name
+    { wch: 25 },  // Email
+    { wch: 15 },  // Phone
+    { wch: 25 },  // Subject
+    { wch: 40 },  // Message (wider for messages)
+    { wch: 10 },  // Quantity
+    { wch: 30 },  // Address
+    { wch: 12 },  // Status
+    { wch: 10 },  // Priority
+    { wch: 15 },  // Assigned To
+    { wch: 20 },  // Created Date
+  ];
 
-    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Contact_Us_Requests");
+  // Add the worksheet to the workbook
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Contact_Us_Requests");
 
-    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-    const data = new Blob([excelBuffer], { type: "application/octet-stream" });
-    saveAs(data, "Contact_Us_Requests_Report.xlsx");
-  };
+  // Generate and save the Excel file
+  const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+  const data = new Blob([excelBuffer], { type: "application/octet-stream" });
+  
+  // Generate filename with current date
+  const dateStamp = new Date().toISOString().split('T')[0];
+  saveAs(data, `Kavindu_TShirt_Printing_Contact_Us_Management_${dateStamp}.xlsx`);
+};
 
   const formatDate = (dateString) =>
     new Date(dateString).toLocaleString("en-US", {
