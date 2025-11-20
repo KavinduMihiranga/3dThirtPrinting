@@ -57,11 +57,11 @@ function CustomerLogin() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4 font-inter">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-indigo-100 p-4 font-inter">
       <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-200">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
             <User className="text-white" size={32} />
           </div>
           <h2 className="text-3xl font-bold text-gray-800">Welcome Back</h2>
@@ -72,7 +72,7 @@ function CustomerLogin() {
         <button
           type="button"
           onClick={fillDemoCredentials}
-          className="w-full mb-6 py-2 px-4 border border-blue-300 rounded-lg text-sm text-blue-700 bg-blue-50 hover:bg-blue-100 transition duration-200 flex items-center justify-center"
+          className="w-full mb-6 py-2 px-4 border border-green-300 rounded-lg text-sm text-green-700 bg-green-50 hover:bg-green-100 transition duration-200 flex items-center justify-center"
         >
           <Mail size={16} className="mr-2" />
           Use Demo Credentials
@@ -91,15 +91,15 @@ function CustomerLogin() {
         {/* Login Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="email" className="block text-sm font-medium text-green-700 mb-2">
               Email Address
             </label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-green-400" size={20} />
               <input
                 type="email"
                 id="email"
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                className="w-full pl-10 pr-4 py-3 border border-green-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition duration-200"
                 placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -110,15 +110,15 @@ function CustomerLogin() {
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="password" className="block text-sm font-medium text-green-700 mb-2">
               Password
             </label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-green-400" size={20} />
               <input
                 type={showPassword ? 'text' : 'password'}
                 id="password"
-                className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                className="w-full pl-10 pr-12 py-3 border border-green-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition duration-200"
                 placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -141,15 +141,15 @@ function CustomerLogin() {
               <input
                 type="checkbox"
                 id="remember"
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
               />
               <label htmlFor="remember" className="ml-2 block text-sm text-gray-700">
                 Remember me
               </label>
             </div>
             <Link 
-              to="/forgot-password" 
-              className="text-sm text-blue-600 hover:text-blue-800 font-medium transition duration-200"
+              to="/customer-forgot-password" 
+              className="text-sm text-green-600 hover:text-green-800 font-medium transition duration-200"
             >
               Forgot Password?
             </Link>
@@ -157,7 +157,7 @@ function CustomerLogin() {
 
           <button
             type="submit"
-            className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3 px-4 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={isLoading}
           >
             {isLoading ? (
@@ -187,21 +187,21 @@ function CustomerLogin() {
         <div className="mt-6 text-center">
           <Link 
             to="/customer-register" 
-            className="text-blue-600 hover:text-blue-800 font-medium transition duration-200"
+            className="text-green-600 hover:text-green-800 font-medium transition duration-200"
           >
             Create an account
           </Link>
         </div>
 
-        {/* Admin Login Link */}
+        {/* Customer Login Link */}
         <div className="mt-4 text-center">
           <p className="text-sm text-gray-600">
-            Are you an admin?{' '}
+            Are you a Customer?{' '}
             <Link 
-              to="/admin-login" 
-              className="text-blue-600 hover:text-blue-800 font-medium"
+              to="/customer-auth" 
+              className="text-green-600 hover:text-green-800 font-medium"
             >
-              Admin Login
+              Customer Login
             </Link>
           </p>
         </div>

@@ -32,6 +32,8 @@ import CustomerAuthRoute from "./login/CustomerLogin.jsx";
 import CustomerRegister from "./register/CustomerRegister.jsx";
 import ContactUsManagement from "./contactUs/dashboard/ContactUsManagement.jsx";
 import ContactUsDetails from "./contactUs/components/ContactDetails.jsx";
+import CustomerForgotPassword from "./login/CustomerForgotPassword.jsx";
+import CustomerResetPassword from "./login/CustomerResetPassword.jsx";
 
 const AppContent = () => {
   const location = useLocation();
@@ -56,7 +58,9 @@ const AppContent = () => {
     "/design-inquiry",
     "/designOrderDetails/:id",
     "/contactUsManagement",
-    "/contactUsDetails/:id"
+    "/contactUsDetails/:id",
+    "/customer-forgot-password",
+    "/customer-reset-password",
   ];
 
   return (
@@ -82,6 +86,8 @@ const AppContent = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/Reset-password" element={<ResetPassword />} />
+        <Route path="/customer-forgot-password" element={<CustomerForgotPassword />} />
+        <Route path="/customer-reset-password" element={<CustomerResetPassword />} />
 
         {/* Protected Admin Routes */}
         <Route 
