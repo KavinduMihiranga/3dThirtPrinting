@@ -469,7 +469,7 @@ function CheckoutPage() {
 
           {/* Shipping Address */}
           <div>
-            <h2 className="text-xl font-bold mb-2">Shipping Address
+            <h2 className="text-xl font-bold mb-2">
                Shipping Address <span className="text-red-500">*</span>
             </h2>
             {!sameAddress ?(

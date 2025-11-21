@@ -14,10 +14,16 @@ function Dashboard() {
   const [productPerPage, setProductsPerPage] = useState(10); // You can adjust this number
 
 
+  const filteredProducts = products.filter((product) =>
+    (product.title || product.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (product.category || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (product.size || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (product.description || "").toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   const indexOfLastProduct = currentPage * productPerPage;
   const indexOfFirstProduct = indexOfLastProduct - productPerPage;
-  const currentProducts = products.slice(indexOfFirstProduct, indexOfLastProduct);
-
+  const currentProducts = filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct);
   // ✅ Export announcements as Excel file
   // const exportToExcel = () => {
   //   if (!products || products.length === 0) {
@@ -65,7 +71,7 @@ const exportToExcel = () => {
     "Category": a.category || 'N/A',
     "Price (LKR)": a.price ? `LKR ${a.price.toLocaleString()}` : 'N/A',
     "Stock": a.qty || 0,
-    "Status": a.status || 'In Stock',
+    "Status": a.status || 'in Stock',
     "Created Date": a.createdAt ? new Date(a.createdAt).toLocaleDateString() : 'N/A',
   }));
 
@@ -195,11 +201,17 @@ const exportToExcel = () => {
     }
   };
 
-  const filteredProducts = products.filter((product) =>
-    (product.title || product.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (product.category || "").toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // const filteredProducts = products.filter((product) =>
+  //   (product.title || product.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //   (product.category || "").toLowerCase().includes(searchTerm.toLowerCase())
+  // );
 
+  // Handle search input change
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1); // Reset to first page when searching
+  };
+  
   return (
     <div className="bg-white p-6 rounded-lg shadow-md min-h-full">
       <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
@@ -229,7 +241,7 @@ const exportToExcel = () => {
           placeholder="Search products..."
           className="flex-grow p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={handleSearchChange}
         />
       </div>
 
@@ -256,7 +268,7 @@ const exportToExcel = () => {
               </tr>
             ) : currentProducts.length > 0 ? (
               currentProducts.map((product, index) => (
-                <tr key={index} className="border-b border-gray-200 hover:bg-gray-50">
+                <tr key={product._id} className="border-b border-gray-200 hover:bg-gray-50">
                   <td className="py-3 px-6 text-left">
                     <button
                       className="text-blue-500 hover:underline"
@@ -281,7 +293,7 @@ const exportToExcel = () => {
                   <td className="py-3 px-6 text-left">
                     <span
                       className={`px-2 py-1 rounded-full text-xs ${
-                        product.status === "In Stock"
+                        product.status === "in stock"
                           ? "bg-green-100 text-green-800"
                           : "bg-red-100 text-red-800"
                       }`}
@@ -316,7 +328,7 @@ const exportToExcel = () => {
         </table>
       </div>
        <div className="flex justify-center mt-6 space-x-2">
-      {Array.from({ length: Math.ceil(products.length / productPerPage) }, (_, i) => (
+      {Array.from({ length: Math.ceil(filteredProducts.length / productPerPage) }, (_, i) => (
         <button
           key={i}
           onClick={() => setCurrentPage(i + 1)}

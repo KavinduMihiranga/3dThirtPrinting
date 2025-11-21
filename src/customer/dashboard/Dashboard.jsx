@@ -278,6 +278,12 @@ const exportToExcel = () => {
    const filteredCustomer = customer.filter(customer => 
         customer.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+     // Calculate pagination based on filtered results
+  const indexOfLastCustomer = currentPage * customerPerPage;
+  const indexOfFirstCustomer = indexOfLastCustomer - customerPerPage;
+  const currentCustomers = filteredCustomer.slice(indexOfFirstCustomer, indexOfLastCustomer);
+
   // ✅ Return must be inside here
   return (
     <div className="flex min-h-screen">
@@ -337,10 +343,10 @@ const exportToExcel = () => {
                     Loading...
                   </td>
                 </tr>
-              ) : customer.length > 0 ? (
-                customer.map((customer, index) => (
+              ) : filteredCustomer.length > 0 ? (
+                currentCustomers.map((customer, index) => (
                   <tr
-                    key={index}
+                    key={customer._id}
                     className="border-b border-gray-200 hover:bg-gray-50"
                   >
                     <td className="py-3 px-6">{customer.name}</td>
@@ -372,7 +378,7 @@ const exportToExcel = () => {
                     colSpan="6"
                     className="text-center py-4 text-gray-400"
                   >
-                    No Customer found.
+                     {searchTerm ? "No customers match your search." : "No customers found."}
                   </td>
                 </tr>
               )}
@@ -383,7 +389,7 @@ const exportToExcel = () => {
         {/* Pagination */}
        
       <div className="flex justify-center mt-6 space-x-2">
-      {Array.from({ length: Math.ceil(customer.length / customerPerPage) }, (_, i) => (
+      {Array.from({ length: Math.ceil(filteredCustomer.length / customerPerPage) }, (_, i) => (
         <button
           key={i}
           onClick={() => setCurrentPage(i + 1)}

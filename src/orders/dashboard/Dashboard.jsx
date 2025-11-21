@@ -8,14 +8,23 @@ import { saveAs } from 'file-saver';
 function Dashboard() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
   const [currentPage, setCurrentPage] = useState(1);
   const [ordersPerPage, setOrdersPerPage] = useState(10); // You can adjust this number
 
+
+  const filteredOrders = orders.filter(order => 
+    order.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    order.tShirtName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    order.address?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    order.status?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   const indexOfLastOrder = currentPage * ordersPerPage;
   const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
-  const currentOrders = orders.slice(indexOfFirstOrder, indexOfLastOrder);
+  const currentOrders = filteredOrders.slice(indexOfFirstOrder, indexOfLastOrder);
 
 
 // ✅ Export Order as Excel file
@@ -191,7 +200,11 @@ const exportToExcel = () => {
       alert("Failed to delete order.");
     }
   };
-
+ // Handle search input change
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1); // Reset to first page when searching
+  };
   return (
     <div className="bg-white p-6 rounded-lg shadow-md min-h-full">
       <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
@@ -218,14 +231,12 @@ const exportToExcel = () => {
       <div className="mb-6 flex items-center space-x-4">
         <input
           type="text"
-          placeholder="Search by name..."
+          placeholder="Search Order..."
           className="flex-grow p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+          value={searchTerm}
+          onChange={handleSearchChange}
         />
-        <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md shadow-sm transition duration-300 ease-in-out">
-          Search
-        </button>
       </div>
-
 
 {/* Rows per page selector */}
       <div className="mb-4 flex items-center justify-end space-x-2">
@@ -271,7 +282,7 @@ const exportToExcel = () => {
               </tr>
             ) : currentOrders.length > 0 ? (
               currentOrders.map((order, index) => (
-                <tr key={index} className="border-b border-gray-200 hover:bg-gray-50">
+                <tr key={order._id} className="border-b border-gray-200 hover:bg-gray-50">
                   <td className="py-3 px-6 text-left whitespace-nowrap">
                     {order.customerName}
                   </td>
@@ -302,7 +313,7 @@ const exportToExcel = () => {
                   colSpan="7"
                   className="py-12 px-6 text-center text-gray-400"
                 >
-                  No orders found.
+                   {searchTerm ? "No orders match your search." : "No orders found."}
                 </td>
               </tr>
             )}
@@ -311,7 +322,7 @@ const exportToExcel = () => {
       </div>
 
       <div className="flex justify-center mt-6 space-x-2">
-      {Array.from({ length: Math.ceil(orders.length / ordersPerPage) }, (_, i) => (
+      {Array.from({ length: Math.ceil(filteredOrders.length / ordersPerPage) }, (_, i) => (
         <button
           key={i}
           onClick={() => setCurrentPage(i + 1)}
