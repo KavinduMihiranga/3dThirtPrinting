@@ -1,15 +1,52 @@
 import { useEffect, useMemo, useRef } from "react";
-import { useGLTF, Decal, Text } from "@react-three/drei";
+import { useGLTF, Decal } from "@react-three/drei";
 import { Group } from "three";
 import * as THREE from "three";
 
 // Preload once
 useGLTF.preload("/models/tshirt.glb");
 
-export default function TshirtModel({ color, designs }) {
+// Helper function to create text texture
+const createTextTexture = (text, color = '#000000', fontSize = 64) => {
+  const canvas = document.createElement('canvas');
+  const context = canvas.getContext('2d');
+  
+   // Use fixed canvas size for consistent scaling
+  const canvasSize = 512;
+  canvas.width = canvasSize;
+  canvas.height = canvasSize;
+  
+  // Set canvas size based on text length
+  const textWidth = Math.max(256, text.length * fontSize * 0.6);
+  const textHeight = fontSize * 1.5;
+  
+  canvas.width = textWidth;
+  canvas.height = textHeight;
+  
+  // Clear canvas with transparent background
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  
+  // Draw text
+  context.fillStyle = color;
+  context.font = `bold ${fontSize}px Arial, sans-serif`;
+  context.textAlign = 'center';
+  context.textBaseline = 'middle';
+  context.fillText(text, canvas.width / 2, canvas.height / 2);
+  
+  // Create texture
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.needsUpdate = true;
+  
+  if ("colorSpace" in texture) texture.colorSpace = THREE.SRGBColorSpace;
+  else texture.encoding = THREE.sRGBEncoding;
+  
+  return texture;
+};
+
+export default function TshirtModel({ color, designs, textMeshesRef }) {
   const rootRef = useRef(new Group());
   const { scene } = useGLTF("/models/tshirt.glb");
-
+  const textureCacheRef = useRef(new Map());
   // One shared material (prevents creating many materials)
   const materialRef = useRef(
     new THREE.MeshStandardMaterial({
@@ -56,10 +93,62 @@ export default function TshirtModel({ color, designs }) {
     return idx;
   }, [meshes]);
 
-  // Render all meshes with one shared material.
-  // Place decals as children of the *target mesh* so they project correctly.
+   // Create textures for all designs with proper caching and font size support
+  const designsWithTextures = useMemo(() => {
+      console.log("Creating textures for designs:", designs);
+
+    return designs.map(design => {
+      if (design.type === "text" && design.text) {
+        try {
+        // Create a cache key based on text content, color, and font size
+        const canvasFontSize = Math.max(32, design.fontSize * 200); // Convert Three.js units to pixels
+        const cacheKey = `${design.text}-${design.color}-${canvasFontSize}`;
+        
+        // Check if we have a cached texture
+        if (textureCacheRef.current.has(cacheKey)) {
+            console.log("Using cached texture for:", design.text);
+
+          return {
+            ...design,
+            texture: textureCacheRef.current.get(cacheKey)
+          };
+        }
+        
+         // Create new texture
+          console.log("Creating new texture for:", design.text, "with font size:", canvasFontSize);
+        // Create new texture with the specified font size
+        const texture = createTextTexture(design.text, design.color || "#000000", canvasFontSize);
+        
+        // Cache the texture
+        textureCacheRef.current.set(cacheKey, texture);
+        
+        return {
+          ...design,
+          texture: texture
+        };
+      }catch(error){
+        console.error("Error creating texture for design:", error);
+        return design;
+      }
+    }return design;
+    });
+  }, [designs]); // This will regenerate when designs change (including font size)
+
+  // Cleanup textures on unmount
+  useEffect(() => {
+    return () => {
+      // Clean up all cached textures
+      console.log("Cleaning up textures");
+      textureCacheRef.current.forEach(texture => {
+        texture.dispose();
+      });
+      textureCacheRef.current.clear();
+    };
+  }, []);
+console.log("Rendering TshirtModel with designs:", designsWithTextures);
+
   return (
-    <group ref={rootRef} scale={[2, 2, 2]} position={[0, 0, 0]} dispose={null}>
+   <group ref={rootRef} scale={[2, 2, 2]} position={[0, 0, 0]} dispose={null}>
       {meshes.map((m, i) => (
         <mesh
           key={i}
@@ -71,16 +160,16 @@ export default function TshirtModel({ color, designs }) {
           receiveShadow
           material={materialRef.current}
         >
+          {/* Render both images and text as decals on the target mesh */}
           {i === targetMeshIndex &&
-            designs.map((d, di) => {
-              if (d.type === "image" && d.texture) {
+            designsWithTextures.map((d, di) => {
+              if ((d.type === "image" || d.type === "text") && d.texture) {
                 return (
                   <Decal
-                    // Decal uses its *parent mesh* as the surface
                     key={`decal-${di}-${d.id}`}
-                    position={d.position || [0, 0.5, 0.4]}
+                    position={d.position || [0, 0.2, 0.45]}
                     rotation={d.rotation || [0, 0, 0]}
-                    scale={d.scale || 0.8}
+                    scale={d.scale || (d.type === "text" ? d.fontSize * 2 : 0.8)}
                     map={d.texture}
                     transparent
                     polygonOffset
@@ -88,20 +177,6 @@ export default function TshirtModel({ color, designs }) {
                     depthTest
                     depthWrite={false}
                   />
-                );
-              } else if (d.type === "text" && d.text) {
-                return (
-                  <Text
-                    key={`text-${di}-${d.id}`}
-                    position={d.position || [0, 0.2, 0.45]}
-                    rotation={d.rotation || [0, 0, 0]}
-                    fontSize={d.fontSize || 0.2}
-                    color={d.color || "#000000"}
-                    anchorX="center"
-                    anchorY="middle"
-                  >
-                    {d.text}
-                  </Text>
                 );
               }
               return null;

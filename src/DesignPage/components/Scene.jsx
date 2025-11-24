@@ -8,13 +8,15 @@ import { Suspense, useEffect, useRef, forwardRef, useImperativeHandle } from "re
 const SceneContent = forwardRef(({ tshirtColor, designs }, ref) => {
   const { scene, gl, camera } = useThree();
   const groupRef = useRef();
-  
+  const textMeshesRef = useRef([]);
+
   // Expose necessary properties to parent via ref
   useImperativeHandle(ref, () => ({
     scene:scene,
     gl,
     camera,
-    tshirtGroup: groupRef.current
+    tshirtGroup: groupRef.current,
+    textMeshes: textMeshesRef.current
   }), [scene, gl, camera]);
 
   return (
@@ -24,7 +26,7 @@ const SceneContent = forwardRef(({ tshirtColor, designs }, ref) => {
       <pointLight position={[-10, -10, -10]} intensity={0.5} />
 
       <group ref={groupRef}>
-        <TshirtModel color={tshirtColor} designs={designs} />
+        <TshirtModel color={tshirtColor} designs={designs} textMeshesRef={textMeshesRef} />
       </group>
     </>
   );
@@ -40,6 +42,7 @@ const Scene = forwardRef(({ tshirtColor, designs }, ref) => {
     gl: canvasRef.current?.gl || null,
     camera: sceneContentRef.current?.camera || null,
     tshirtGroup: sceneContentRef.current?.tshirtGroup || null,
+    textMeshes: sceneContentRef.current?.textMeshes || [],
   }));
 
   useEffect(() => {

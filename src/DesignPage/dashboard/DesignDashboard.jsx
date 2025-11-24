@@ -136,13 +136,28 @@ function DesignDashboard() {
   const handleAddText = useCallback(() => {
     const text = prompt("Enter text for your T-shirt:")?.trim();
     if (!text) return;
+
+      // Create preview for the design list
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = 200;
+      canvas.height = 100;
+      ctx.fillStyle = '#f0f0f0';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#000000';
+      ctx.font = 'bold 24px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+      const previewUrl = canvas.toDataURL();
+
     const newDesign = {
       id: crypto.randomUUID?.() || String(Date.now()),
       type: "text",
       text,
       color: "#000000",
       fontSize: 0.2,
-      position: [0, 0.2, 0.45],
+      position: [0, 0.1, 0.15],
       rotation: [0, 0, 0],
     };
     setDesigns((prev) => {
@@ -213,7 +228,24 @@ function DesignDashboard() {
   const handleTextColorChange = useCallback((index, color) => {
     setDesigns((prev) => {
       const next = [...prev];
-      next[index] = { ...next[index], color };
+      const design = next[index];
+
+      if (design.type === "text") {
+ // Update preview with new color
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = 200;
+      canvas.height = 100;
+      ctx.fillStyle = '#f0f0f0';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = color;
+      ctx.font = 'bold 24px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(design.text, canvas.width / 2, canvas.height / 2);
+      const previewUrl = canvas.toDataURL();
+
+      next[index] = { ...next[index], color, preview: previewUrl };}
       return next;
     });
   }, []);
@@ -248,7 +280,7 @@ function DesignDashboard() {
     return designs.map(design => ({
       type: design.type,
       ...(design.type === 'text' && { text: design.text, color: design.color, fontSize: design.fontSize }),
-      ...(design.type === 'image' && { fileName: design.fileName, fileSize: design.fileSize }),
+      ...(design.type === 'image' && { fileName: design.fileName, fileSize: design.fileSize, preview: design.preview }),
       position: design.position,
       rotation: design.rotation,
       scale: design.scale || 1
