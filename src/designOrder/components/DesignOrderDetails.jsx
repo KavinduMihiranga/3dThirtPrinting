@@ -24,9 +24,10 @@ function Model({ url }) {
   return <primitive object={scene} scale={1.5} />;
 }
 
-function ModelViewer({ designFile }) {
+function ModelViewer({ designFile, onDownloadUrlReady }) {
   const [modelUrl, setModelUrl] = useState(null);
   const [error, setError] = useState(null);
+  const [downloadUrl, setDownloadUrl] = useState(null);
 
   useEffect(() => {
     if (!designFile) {
@@ -34,13 +35,20 @@ function ModelViewer({ designFile }) {
       return;
     }
 
+    let cleanup = () => {};
+
     if (typeof designFile === 'string' && designFile.startsWith('/uploads')) {
-      setModelUrl(`http://localhost:5000${designFile}`);
+      const url = `http://localhost:5000${designFile}`;
+      setModelUrl(url);
+      setDownloadUrl(url);
+      if (onDownloadUrlReady) onDownloadUrlReady(url);
       return;
     }
 
     if (typeof designFile === 'string' && (designFile.startsWith('http://') || designFile.startsWith('https://'))) {
       setModelUrl(designFile);
+      setDownloadUrl(designFile);
+      if (onDownloadUrlReady) onDownloadUrlReady(designFile);
       return;
     }
 
@@ -58,25 +66,30 @@ function ModelViewer({ designFile }) {
         const blob = new Blob([bytes], { type: 'model/gltf-binary' });
         const blobUrl = URL.createObjectURL(blob);
         setModelUrl(blobUrl);
+        setDownloadUrl(blobUrl);
+        if (onDownloadUrlReady) onDownloadUrlReady(blobUrl);
+        cleanup = () => URL.revokeObjectURL(blobUrl);
 
-        return () => URL.revokeObjectURL(blobUrl);
       } catch (err) {
         console.error('Failed to convert base64 to blob:', err);
         setError('Failed to process 3D model data');
       }
-      return;
+      return cleanup;
     }
 
     if (typeof designFile === 'object') {
       const path = designFile.url || designFile.path || designFile.location || designFile.filename;
       if (path) {
-        setModelUrl(path.startsWith('http') ? path : `http://localhost:5000${path}`);
+        const url = path.startsWith('http') ? path : `http://localhost:5000${path}`;
+        setModelUrl(url);
+        setDownloadUrl(url);
+        if (onDownloadUrlReady) onDownloadUrlReady(url); 
         return;
       }
     }
 
     setError('Invalid model file format');
-  }, [designFile]);
+  }, [designFile, onDownloadUrlReady]);
 
   const isValidModelUrl = (url) => {
     if (!url || typeof url !== 'string') return false;
@@ -157,8 +170,28 @@ function DesignOrderDetails() {
   const [error, setError] = useState(null);
   const [editingPrice, setEditingPrice] = useState(false);
   const [priceInput, setPriceInput] = useState("");
+  const [downloadUrl, setDownloadUrl] = useState(null); 
   const navigate = useNavigate();
 
+  const handleDownload = () => {
+    if (!downloadUrl) {
+      alert('No design file available for download');
+      return;
+    }
+
+    // Create a temporary anchor element to trigger download
+    const a = document.createElement('a');
+    a.href = downloadUrl;
+    
+    // Extract filename from URL or use a default name
+    const filename = downloadUrl.split('/').pop() || 'design-model.glb';
+    a.download = filename;
+    
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+  
   useEffect(() => {
     const fetchOrder = async () => {
       try {
@@ -595,11 +628,16 @@ function DesignOrderDetails() {
 
                 {/* 3D Model Viewer */}
                 <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
-                  <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                  <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center"
+                    onClick={handleDownload}
+                  >
                     <Download className="mr-3 text-blue-500" size={24} />
                     3D Model Viewer
                   </h2>
-                  <ModelViewer designFile={order.designFile} />
+                  
+                  <ModelViewer designFile={order.designFile} 
+                  onDownloadUrlReady={setDownloadUrl} 
+                  />
                   <p className="text-sm text-gray-500 mt-3 text-center">
                     🖱️ Drag to rotate • 🔍 Scroll to zoom • 🖱️ Right-click to pan
                   </p>
