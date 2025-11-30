@@ -1,10 +1,31 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../pages/CartContext";
+import axios from "axios";
 
 function CheckoutPage() {
   const navigate = useNavigate();
   const { cartItems } = useCart();
+
+  // States for customer detection
+  const [customerStatus, setCustomerStatus] = useState('unknown'); // 'unknown', 'new', 'existing'
+  const [existingCustomer, setExistingCustomer] = useState(null);
+  const [checkingCustomer, setCheckingCustomer] = useState(false);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+
+  // Check if customer exists by email
+  const checkCustomerByEmail = async (email) => {
+    try {
+      setCheckingCustomer(true);
+      const response = await axios.get(`http://localhost:5000/api/customer/check-email/${encodeURIComponent(email)}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error checking customer:", error);
+      return { exists: false, customer: null };
+    } finally {
+      setCheckingCustomer(false);
+    }
+  };
 
   const [sameAddress, setSameAddress] = useState(true);
   const [billingAddress, setBillingAddress] = useState({
@@ -54,14 +75,9 @@ function CheckoutPage() {
     province: "",
   });
 
-  // const [name, setName] = useState("");
-  // const [nameError, setNameError] = useState("");
-  // const [email, setEmail] = useState("");
-  // const [phone, setPhone] = useState("");
-
-// Name validation function
+  // Name validation function
   const validateName = (value) => {
-     if (!value.trim()) return "Name is required";
+    if (!value.trim()) return "Name is required";
     if (value.trim().length < 2) return "Name must be at least 2 characters long";
     if (value.trim().length > 50) return "Name cannot exceed 50 characters";
     if (/[0-9]/.test(value)) return "Name cannot contain numbers";
@@ -72,7 +88,7 @@ function CheckoutPage() {
     return "";
   };
 
-   const validateEmail = (value) => {
+  const validateEmail = (value) => {
     if (!value.trim()) return "Email is required";
     const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
     if (!emailRegex.test(value)) return "Please enter a valid email address";
@@ -81,7 +97,6 @@ function CheckoutPage() {
 
   const validatePhone = (value) => {
     if (!value.trim()) return "Phone number is required";
-    // Remove all non-digit characters for validation
     const cleanPhone = value.replace(/\D/g, '');
     if (cleanPhone.length < 10) return "Phone number must be at least 10 digits";
     if (!/^[+]?[\d\s-()]+$/.test(value)) return "Please enter a valid phone number";
@@ -95,41 +110,100 @@ function CheckoutPage() {
     return "";
   };
 
- // Handle field changes
+  // Handle field changes
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     
-    // Real-time validation for touched fields
-    // if (touched[field]) {
-      let error = "";
-      switch (field) {
-        case 'name':
-          error = validateName(value);
-          break;
-        case 'email':
-          error = validateEmail(value);
-          break;
-        case 'phone':
-          error = validatePhone(value);
-          break;
-        default:
-          break;
-      }
-      setErrors(prev => ({ ...prev, [field]: error }));
-    // }
+    let error = "";
+    switch (field) {
+      case 'name':
+        error = validateName(value);
+        break;
+      case 'email':
+        error = validateEmail(value);
+        // Reset customer status when email changes
+        if (value !== formData.email) {
+          setCustomerStatus('unknown');
+          setExistingCustomer(null);
+          setShowLoginPrompt(false);
+        }
+        break;
+      case 'phone':
+        error = validatePhone(value);
+        break;
+      default:
+        break;
+    }
+    setErrors(prev => ({ ...prev, [field]: error }));
   };
 
- const handleBillingAddressChange = (field, value) => {
+  // Enhanced email blur with customer check
+  const handleEmailBlur = async () => {
+    setTouched(prev => ({ ...prev, email: true }));
+    
+    const emailError = validateEmail(formData.email);
+    setErrors(prev => ({ ...prev, email: emailError }));
+    
+    // Check if customer exists
+    if (!emailError && formData.email) {
+      const customerCheck = await checkCustomerByEmail(formData.email);
+      if (customerCheck.exists && customerCheck.customer) {
+        setCustomerStatus('existing');
+        setExistingCustomer(customerCheck.customer);
+        setShowLoginPrompt(false);
+        
+        // Auto-fill details but allow user to override
+        setFormData(prev => ({
+          ...prev,
+          name: prev.name || customerCheck.customer.name,
+          phone: prev.phone || customerCheck.customer.phone
+        }));
+      } else {
+        setCustomerStatus('new');
+        setExistingCustomer(null);
+        setShowLoginPrompt(true); // Show login prompt for new customers
+      }
+    }
+  };
+
+  // Redirect to login page
+  const redirectToLogin = () => {
+    // Save cart items and form data to session storage or context
+    const checkoutData = {
+      cartItems,
+      formData,
+      billingAddress,
+      shippingAddress: sameAddress ? billingAddress : shippingAddress,
+      sameAddress
+    };
+    
+    // Save to session storage for retrieval after login
+    sessionStorage.setItem('pendingCheckout', JSON.stringify(checkoutData));
+    
+    // Redirect to login page
+    navigate("/customer-register", { 
+      state: { 
+        message: "Please login or register to continue with your purchase",
+        redirectTo: "/checkout"
+      }
+    });
+  };
+
+  // Continue as guest (optional - if you want to allow guest checkout)
+  const continueAsGuest = () => {
+    setShowLoginPrompt(false);
+    // Allow the user to continue with checkout as guest
+  };
+
+  const handleBillingAddressChange = (field, value) => {
     setBillingAddress(prev => ({ ...prev, [field]: value }));
     
-    // if (touched.billingAddress[field]) {
-      const fieldName = field.replace(/([A-Z])/g, ' $1').toLowerCase();
-      const error = validateAddressField(value, fieldName);
-      setErrors(prev => ({
-        ...prev,
-        billingAddress: { ...prev.billingAddress, [field]: error }
-      }));
-    // }
+    const fieldName = field.replace(/([A-Z])/g, ' $1').toLowerCase();
+    const error = validateAddressField(value, fieldName);
+    setErrors(prev => ({
+      ...prev,
+      billingAddress: { ...prev.billingAddress, [field]: error }
+    }));
 
     // If same address is checked, update shipping address too
     if (sameAddress) {
@@ -137,7 +211,7 @@ function CheckoutPage() {
     }
   };
 
-   const handleShippingAddressChange = (field, value) => {
+  const handleShippingAddressChange = (field, value) => {
     setShippingAddress(prev => ({ ...prev, [field]: value }));
     
     const fieldName = field.replace(/([A-Z])/g, ' $1').toLowerCase();
@@ -148,7 +222,7 @@ function CheckoutPage() {
     }));
   };
 
-   // Handle blur events
+  // Handle blur events
   const handleBlur = (field) => {
     setTouched(prev => ({ ...prev, [field]: true }));
     
@@ -169,7 +243,7 @@ function CheckoutPage() {
     setErrors(prev => ({ ...prev, [field]: error }));
   };
 
-   const handleAddressBlur = (type, field) => {
+  const handleAddressBlur = (type, field) => {
     setTouched(prev => ({
       ...prev,
       [type]: { ...prev[type], [field]: true }
@@ -185,24 +259,7 @@ function CheckoutPage() {
     }));
   };
 
-  
-
-  // const handleNameChange = (e) => {
-  //   const value = e.target.value;
-  //   setName(value);
-    
-  //   // Real-time validation
-  //   const error = validateName(value);
-  //   setNameError(error);
-  // };
-
-  // const handleNameBlur = () => {
-  //   // Additional validation on blur
-  //   const error = validateName(name);
-  //   setNameError(error);
-  // };
-
- const handleCheckboxChange = () => {
+  const handleCheckboxChange = () => {
     const newSameAddress = !sameAddress;
     setSameAddress(newSameAddress);
     if (newSameAddress) {
@@ -218,16 +275,6 @@ function CheckoutPage() {
       }));
     }
   };
-
-  // const handleCheckboxChange = () => {
-  //   const newSameAddress = !sameAddress;
-  //   setSameAddress(newSameAddress);
-  //   if (newSameAddress) {
-  //     // Copy billing to shipping when "same as billing" is checked
-  //     setShippingAddress(billingAddress);
-  //   }
-  // };
-
 
   const validateAllFields = () => {
     const newErrors = {
@@ -246,9 +293,9 @@ function CheckoutPage() {
       },
     };
 
- setErrors(newErrors);
+    setErrors(newErrors);
 
-  // Mark all fields as touched
+    // Mark all fields as touched
     setTouched({
       name: true,
       email: true,
@@ -280,18 +327,12 @@ function CheckoutPage() {
   const handleProceedToPayment = (e) => {
     e.preventDefault();
 
+    // If new customer, redirect to login instead of proceeding to payment
+    if (customerStatus === 'new') {
+      redirectToLogin();
+      return;
+    }
 
-     // Validate all fields before proceeding
-    // const nameValidationError = validateName(name);
-    // if (nameValidationError) {
-    //   setNameError(nameValidationError);
-    //   return;
-    // }
-
-    // if (!email || !phone || !billingAddress.addressLine1) {
-    //   alert("Please fill in all required fields before continuing.");
-    //   return;
-    // }
     if (!validateAllFields()) {
       alert("Please fix all validation errors before continuing.");
       return;
@@ -311,11 +352,12 @@ function CheckoutPage() {
         shippingAddress: sameAddress ? billingAddress : shippingAddress,
         cartItems,
         totalAmount,
+        isExistingCustomer: customerStatus === 'existing'
       },
     });
   };
 
- const getInputClassName = (error) => {
+  const getInputClassName = (error) => {
     return `w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 ${
       error 
         ? "border-red-500 focus:ring-red-200" 
@@ -347,10 +389,99 @@ function CheckoutPage() {
            (!sameAddress && (!shippingAddress.addressLine1 || !shippingAddress.city || !shippingAddress.province));
   };
 
+  // Enhanced email field with customer status
+  const renderEmailField = () => (
+    <div>
+      <label className="block text-gray-700 mb-2">
+        Email Address
+        <span className="text-red-500">*</span>
+      </label>
+      <div className="relative">
+        <input
+          type="email"
+          className={getInputClassName(errors.email)}
+          value={formData.email}
+          onChange={(e) => handleInputChange('email', e.target.value)}
+          onBlur={handleEmailBlur}
+          placeholder="Enter your email"
+          required
+        />
+        {checkingCustomer && (
+          <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+          </div>
+        )}
+        {!checkingCustomer && customerStatus === 'existing' && (
+          <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+            <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
+              Existing Customer
+            </span>
+          </div>
+        )}
+        {!checkingCustomer && customerStatus === 'new' && formData.email && (
+          <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+            <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded">
+              New Customer
+            </span>
+          </div>
+        )}
+      </div>
+      
+      {customerStatus === 'existing' && existingCustomer && (
+        <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded">
+          <p className="text-sm text-green-800">
+            <strong>Welcome back {existingCustomer.name}!</strong><br />
+            We found your existing account. You can proceed to payment.
+          </p>
+        </div>
+      )}
+
+      {errors.email && (
+        <p className="text-red-500 text-sm mt-1 flex items-center">
+          {renderValidationIcon(errors.email, formData.email)}
+          {errors.email}
+        </p>
+      )}
+      {!errors.email && formData.email && customerStatus === 'new' && !checkingCustomer && (
+        <p className="text-yellow-600 text-sm mt-1 flex items-center">
+          {renderValidationIcon(errors.email, formData.email)}
+          New customer detected. You'll be redirected to login.
+        </p>
+      )}
+    </div>
+  );
 
   return (
     <div className="max-w-3xl mx-auto p-6 bg-white shadow-lg rounded-lg">
       <h1 className="text-2xl font-bold mb-4">Checkout Page</h1>
+
+      {/* Login Prompt Modal */}
+      {showLoginPrompt && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
+            <h3 className="text-lg font-bold mb-4">Account Required</h3>
+            <p className="text-gray-600 mb-4">
+              We noticed you're a new customer. Please login or register to continue with your purchase. 
+              This helps us serve you better and track your orders.
+            </p>
+            <div className="flex space-x-4">
+              <button
+                onClick={redirectToLogin}
+                className="flex-1 bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
+              >
+                Login / Register
+              </button>
+              {/* Optional: Remove this button if you don't want guest checkout */}
+              <button
+                onClick={continueAsGuest}
+                className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded hover:bg-gray-400"
+              >
+                Continue as Guest
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <form className="space-y-6" onSubmit={handleProceedToPayment}>
         {/* Full Name */}
@@ -383,36 +514,12 @@ function CheckoutPage() {
 
         {/* Email and Phone */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-gray-700 mb-2">Email Address
-              <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="email"
-              className={getInputClassName(errors.email)}
-              value={formData.email}
-              onChange={(e) => handleInputChange('email', e.target.value)}
-              onBlur={() => handleBlur('email')}
-              placeholder="Enter your email"
-              required
-            />
-            {errors.email && (
-              <p className="text-red-500 text-sm mt-1 flex items-center">
-                {renderValidationIcon(errors.email, formData.email)}
-                {errors.email}
-              </p>
-            )}
-            {!errors.email && formData.email && (
-              <p className="text-green-500 text-sm mt-1 flex items-center">
-                {renderValidationIcon(errors.email, formData.email)}
-                Email looks good!
-              </p>
-            )}
-          </div>
+          {/* Enhanced Email Field */}
+          {renderEmailField()}
 
           <div>
             <label className="block text-gray-700 mb-2">Phone Number
-            <span className="text-red-500">*</span>
+              <span className="text-red-500">*</span>
             </label>
             <input
               type="tel"
@@ -447,17 +554,17 @@ function CheckoutPage() {
             </h2>
             {Object.keys(billingAddress).map((field) => (
               <div key={field} className="mb-2">
-              <input
-                type="text"
-                value={billingAddress[field]}
-                onChange={(e) =>
-                  handleBillingAddressChange(field, e.target.value)}
-                onBlur={() => handleAddressBlur('billingAddress', field)}
-                className={getInputClassName(errors.billingAddress[field])}
-                placeholder={`Enter your ${field.replace(/([A-Z])/g, ' $1').toLowerCase()}`}
-                required={['addressLine1', 'city', 'province'].includes(field)}
-              />
-              {errors.billingAddress[field] && (
+                <input
+                  type="text"
+                  value={billingAddress[field]}
+                  onChange={(e) =>
+                    handleBillingAddressChange(field, e.target.value)}
+                  onBlur={() => handleAddressBlur('billingAddress', field)}
+                  className={getInputClassName(errors.billingAddress[field])}
+                  placeholder={`Enter your ${field.replace(/([A-Z])/g, ' $1').toLowerCase()}`}
+                  required={['addressLine1', 'city', 'province'].includes(field)}
+                />
+                {errors.billingAddress[field] && (
                   <p className="text-red-500 text-sm mt-1 flex items-center">
                     {renderValidationIcon(errors.billingAddress[field], billingAddress[field])}
                     {errors.billingAddress[field]}
@@ -470,21 +577,21 @@ function CheckoutPage() {
           {/* Shipping Address */}
           <div>
             <h2 className="text-xl font-bold mb-2">
-               Shipping Address <span className="text-red-500">*</span>
+              Shipping Address <span className="text-red-500">*</span>
             </h2>
-            {!sameAddress ?(
+            {!sameAddress ? (
               Object.keys(shippingAddress).map((field) => (
                 <div key={field} className="mb-2">
-                <input
-                  type="text"
-                  value={shippingAddress[field]}
-                  onChange={(e) => handleShippingAddressChange(field, e.target.value)}
-                  onBlur={() => handleAddressBlur('shippingAddress', field)}
-                  className={getInputClassName(errors.shippingAddress[field])}
-                  placeholder={`Enter your ${field.replace(/([A-Z])/g, ' $1').toLowerCase()}`}
-                  required={['addressLine1', 'city', 'province'].includes(field)}
-                />
-                {errors.shippingAddress[field] && (
+                  <input
+                    type="text"
+                    value={shippingAddress[field]}
+                    onChange={(e) => handleShippingAddressChange(field, e.target.value)}
+                    onBlur={() => handleAddressBlur('shippingAddress', field)}
+                    className={getInputClassName(errors.shippingAddress[field])}
+                    placeholder={`Enter your ${field.replace(/([A-Z])/g, ' $1').toLowerCase()}`}
+                    required={['addressLine1', 'city', 'province'].includes(field)}
+                  />
+                  {errors.shippingAddress[field] && (
                     <p className="text-red-500 text-sm mt-1 flex items-center">
                       {renderValidationIcon(errors.shippingAddress[field], shippingAddress[field])}
                       {errors.shippingAddress[field]}
@@ -511,18 +618,22 @@ function CheckoutPage() {
           Shipping address same as billing
         </label>
 
-        {/* Submit */}
+        {/* Submit Button with dynamic text */}
         <div className="flex justify-end mt-6">
           <button
             type="submit"
             className={`px-6 py-2 rounded-md font-medium ${
               isSubmitDisabled() 
                 ? "bg-gray-400 cursor-not-allowed text-gray-700" 
-                : "bg-blue-600 hover:bg-blue-700 text-white"
+                : customerStatus === 'new' 
+                  ? "bg-yellow-600 hover:bg-yellow-700 text-white"
+                  : "bg-blue-600 hover:bg-blue-700 text-white"
             }`}
-            disabled={isSubmitDisabled()}
+            disabled={isSubmitDisabled() || checkingCustomer}
           >
-            Continue to Payment
+            {checkingCustomer ? "Checking..." : 
+             customerStatus === 'new' ? "Login to Continue" : 
+             "Continue to Payment"}
           </button>
         </div>
       </form>
