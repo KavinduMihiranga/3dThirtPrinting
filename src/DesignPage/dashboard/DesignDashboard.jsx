@@ -669,7 +669,7 @@ function DesignDashboard() {
 
           {/* Center - 3D Preview */}
           <div className="lg:col-span-6 bg-gradient-to-br from-gray-900 to-gray-800 relative">
-            <div className="h-[600px] relative">
+            <div className="h-[1300px] relative">
               <Scene 
                 tshirtColor={tshirtColor} 
                 designs={designs} 

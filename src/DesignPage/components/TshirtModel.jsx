@@ -148,7 +148,7 @@ export default function TshirtModel({ color, designs, textMeshesRef }) {
 console.log("Rendering TshirtModel with designs:", designsWithTextures);
 
   return (
-   <group ref={rootRef} scale={[2, 2, 2]} position={[0, 0, 0]} dispose={null}>
+   <group ref={rootRef} scale={[4, 4, 4]} position={[0, 0, 0]} dispose={null}>
       {meshes.map((m, i) => (
         <mesh
           key={i}
