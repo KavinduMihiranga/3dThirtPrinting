@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
+
 function AddAnnouncement() {
   const [formData, setFormData] = useState({
     title: '',
@@ -19,12 +20,35 @@ function AddAnnouncement() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      await axios.post('http://localhost:5000/api/announcements', formData);
-      navigate('/announcements');
-    } catch (err) {
-      setError(err.response?.data?.message || err.message);
-    }
+  setError(null);
+  
+  // Optional: Show confirmation dialog
+  const shouldSendEmails = window.confirm(
+      "📢 This announcement will be sent to ALL customers via email.\n\n" +
+      "Make sure your announcement is:\n" +
+      "✅ Clear and professional\n" +
+      "✅ Free of errors\n" +
+      "✅ Relevant to all customers\n\n" +
+      "Are you ready to send this announcement?"
+  );
+  
+  if (!shouldSendEmails) {
+    return;
+  }
+
+  try {
+    const response = await axios.post(
+      'http://localhost:5000/api/announcements', 
+      formData
+    );
+    
+    // Show success message with recipient count
+    alert(`Announcement created successfully! Emails sent to ${response.data.recipientsCount || 'all'} customers.`);
+    
+    navigate('/announcements');
+  } catch (err) {
+    setError(err.response?.data?.message || err.message);
+  }
   };
 
   return (

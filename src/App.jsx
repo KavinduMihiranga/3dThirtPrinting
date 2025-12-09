@@ -53,19 +53,22 @@ const AppContent = () => {
     "/payment-success",
     "/announcementDashboard",
     "/addAnnouncement",
-    "/editAnnouncements/:id",
+    "/editAnnouncements",
     "/announcements",
     "/design-inquiry",
-    "/designOrderDetails/:id",
+    "/designOrderDetails",
     "/contactUsManagement",
-    "/contactUsDetails/:id",
+    "/contactUsDetails",
     "/customer-forgot-password",
     "/customer-reset-password",
   ];
-
+  
+  const shouldHideMenuBar = noMenuBarPaths.some(excludedPath => 
+    location.pathname.startsWith(excludedPath)
+  );
   return (
     <>
-      {!noMenuBarPaths.includes(location.pathname) && <MenuBar />}
+      {!shouldHideMenuBar && <MenuBar />}
 
       <Routes>
         {/* Public Routes */}
